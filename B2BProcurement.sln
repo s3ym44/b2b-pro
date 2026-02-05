@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2BProcurement.Business", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "B2BProcurement", "B2BProcurement", "{B68B8AC8-7DC7-0690-ED70-3BCF14631311}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2BProcurement.Web", "B2BProcurement\B2BProcurement.Web.csproj", "{83EA865A-DA09-4E1F-8E6D-51A0BCB2336D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "B2BProcurement.Web", "B2BProcurement.Web\B2BProcurement.Web.csproj", "{83EA865A-DA09-4E1F-8E6D-51A0BCB2336D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
