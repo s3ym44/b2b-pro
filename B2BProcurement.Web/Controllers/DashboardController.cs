@@ -30,7 +30,15 @@ namespace B2BProcurement.Controllers
             var now = DateTime.UtcNow;
             var sixMonthsAgo = now.AddMonths(-6);
 
-            // Özet Kartları
+            // Özet Kartları - SQLite decimal Sum desteklemediği için client-side hesapla
+            var monthlyQuotations = await _context.Quotations
+                .Where(q => q.SupplierCompanyId == companyId && 
+                    q.Status == QuotationStatus.Approved &&
+                    q.CreatedAt.Month == now.Month &&
+                    q.CreatedAt.Year == now.Year)
+                .Select(q => q.TotalAmount)
+                .ToListAsync();
+
             var summary = new DashboardSummaryDto
             {
                 ActiveQuotations = await _context.Quotations
@@ -45,12 +53,7 @@ namespace B2BProcurement.Controllers
                     .CountAsync(q => q.RFQ != null && q.RFQ.CompanyId == companyId && 
                         q.Status == QuotationStatus.Submitted),
                 
-                MonthlyTotal = await _context.Quotations
-                    .Where(q => q.SupplierCompanyId == companyId && 
-                        q.Status == QuotationStatus.Approved &&
-                        q.CreatedAt.Month == now.Month &&
-                        q.CreatedAt.Year == now.Year)
-                    .SumAsync(q => q.TotalAmount)
+                MonthlyTotal = monthlyQuotations.Sum()
             };
 
             // Son 6 Ay Teklif Trendi
