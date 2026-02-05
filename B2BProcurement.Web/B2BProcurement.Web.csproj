@@ -1,5 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\B2BProcurement.Business\B2BProcurement.Business.csproj" />
   </ItemGroup>
@@ -13,10 +19,9 @@
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+  <!-- SQLite veritabanı dosyasını output klasörüne kopyala -->
+  <ItemGroup>
+    <None Update="B2BProcurement.db" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>

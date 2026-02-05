@@ -20,12 +20,22 @@ if (!builder.Environment.IsDevelopment())
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// SQLite için veritabanı yolunu ContentRootPath'e göre ayarla
-if (connectionString.Contains("Data Source=") && !connectionString.Contains("/"))
+// SQLite için veritabanı yolunu çalışma dizinine göre ayarla
+if (connectionString.Contains("Data Source=") && !Path.IsPathRooted(connectionString.Replace("Data Source=", "")))
 {
     var dbFileName = connectionString.Replace("Data Source=", "").Replace("./", "").Trim();
-    var dbPath = Path.Combine(builder.Environment.ContentRootPath, dbFileName);
+    // Önce uygulama dizininde ara (bin/Debug vb.)
+    var appBasePath = AppContext.BaseDirectory;
+    var dbPath = Path.Combine(appBasePath, dbFileName);
+    
+    // Eğer orada yoksa ContentRootPath'te ara
+    if (!File.Exists(dbPath))
+    {
+        dbPath = Path.Combine(builder.Environment.ContentRootPath, dbFileName);
+    }
+    
     connectionString = $"Data Source={dbPath}";
+    Console.WriteLine($"Database path: {dbPath}");
 }
 
 // ========================================
