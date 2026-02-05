@@ -1,0 +1,235 @@
+@model List<B2BProcurement.Controllers.RfqIncomingViewModel>
+@{
+    ViewData["Title"] = "Gelen Teklif Talepleri";
+    ViewData["PageTitle"] = "Gelen RFQ'lar";
+    ViewData["Breadcrumb"] = "RFQ";
+}
+
+@section Styles {
+<style>
+    .incoming-header {
+        margin-bottom: 24px;
+    }
+    
+    .rfq-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+    }
+    
+    .rfq-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .rfq-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .rfq-card-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, var(--primary), #8B5CF6);
+        color: var(--white);
+    }
+    
+    .rfq-card-header .rfq-number {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+    
+    .rfq-card-header .rfq-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 4px 0 0;
+    }
+    
+    .rfq-card-body {
+        padding: 20px;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 14px;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        color: var(--gray-500);
+    }
+    
+    .info-value {
+        font-weight: 500;
+        color: var(--gray-800);
+    }
+    
+    .deadline-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .deadline-safe {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    
+    .deadline-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+    
+    .deadline-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+    
+    .quotation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .quotation-sent {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    
+    .quotation-pending {
+        background: rgba(107, 114, 128, 0.1);
+        color: var(--gray-600);
+    }
+    
+    .rfq-card-footer {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .empty-state i {
+        font-size: 64px;
+        color: var(--gray-300);
+        margin-bottom: 20px;
+    }
+</style>
+}
+
+<div class="incoming-header">
+    <h4 class="mb-1">Gelen Teklif Talepleri</h4>
+    <p class="text-muted">Sektörünüze ait açık RFQ'lar - Toplam @ViewBag.TotalItems adet</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h5>Henüz Gelen RFQ Yok</h5>
+        <p class="text-muted">Sektörünüze ait açık teklif talebi bulunmuyor.</p>
+    </div>
+}
+else
+{
+    <div class="rfq-grid">
+        @foreach (var rfq in Model)
+        {
+            var deadlineClass = rfq.DaysRemaining > 7 ? "deadline-safe" : rfq.DaysRemaining > 3 ? "deadline-warning" : "deadline-danger";
+            
+            <div class="rfq-card">
+                <div class="rfq-card-header">
+                    <span class="rfq-number">#@rfq.RfqNumber</span>
+                    <h5 class="rfq-title">@rfq.Title</h5>
+                </div>
+                <div class="rfq-card-body">
+                    <div class="info-row">
+                        <span class="info-label">Talep Eden</span>
+                        <span class="info-value">@rfq.CompanyName</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Sektör</span>
+                        <span class="info-value">@rfq.SectorName</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Kalem Sayısı</span>
+                        <span class="info-value">@rfq.ItemCount</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Son Tarih</span>
+                        <span class="deadline-badge @deadlineClass">
+                            @rfq.EndDate.ToString("dd MMM yyyy") (@rfq.DaysRemaining gün)
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Teklif Durumu</span>
+                        @if (rfq.HasMyQuotation)
+                        {
+                            <span class="quotation-badge quotation-sent">
+                                <i class="fas fa-check-circle"></i>Teklif Verildi
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="quotation-badge quotation-pending">
+                                <i class="fas fa-clock"></i>Bekliyor
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="rfq-card-footer">
+                    <span class="text-muted small">@rfq.QuotationCount teklif mevcut</span>
+                    <div class="d-flex gap-2">
+                        <a href="@Url.Action("Details", new { id = rfq.Id })" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye me-1"></i>Detay
+                        </a>
+                        @if (!rfq.HasMyQuotation)
+                        {
+                            <a href="@Url.Action("Create", "Quotation", new { rfqId = rfq.Id })" class="btn btn-sm btn-success">
+                                <i class="fas fa-paper-plane me-1"></i>Teklif Ver
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <!-- Sayfalama -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Incoming", new { page = i })">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}

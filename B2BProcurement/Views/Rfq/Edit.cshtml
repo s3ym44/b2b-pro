@@ -1,0 +1,403 @@
+@model B2BProcurement.Controllers.RfqFormViewModel
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "RFQ Düzenle" : "Yeni RFQ";
+    ViewData["PageTitle"] = isEdit ? "RFQ Düzenle" : "Yeni RFQ #" + Model.RfqNumber;
+    ViewData["Breadcrumb"] = "RFQ";
+}
+
+@section Styles {
+<style>
+    .form-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
+    }
+    
+    .form-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .form-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .form-body {
+        padding: 24px;
+    }
+    
+    .form-footer {
+        padding: 20px 24px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: var(--gray-700);
+    }
+    
+    .required {
+        color: var(--danger);
+    }
+    
+    /* Items Table */
+    .items-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .items-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .items-table {
+        width: 100%;
+    }
+    
+    .items-table th {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--gray-100);
+    }
+    
+    .items-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+    
+    .items-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+    
+    .empty-items {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray-500);
+    }
+    
+    /* Add Item Form */
+    .add-item-form {
+        background: var(--gray-50);
+        padding: 20px;
+        border-top: 1px solid var(--gray-100);
+    }
+    
+    .publish-section {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        border: 1px dashed var(--success);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        text-align: center;
+        margin-top: 24px;
+    }
+    
+    .publish-section h5 {
+        color: var(--success);
+        margin-bottom: 8px;
+    }
+</style>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" method="post" id="rfqForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    
+    <!-- RFQ Bilgileri -->
+    <div class="form-card">
+        <div class="form-header">
+            <h5><i class="fas fa-info-circle me-2 text-primary"></i>RFQ Bilgileri</h5>
+        </div>
+        <div class="form-body">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Title" class="form-label">Başlık <span class="required">*</span></label>
+                    <input asp-for="Title" class="form-control" placeholder="RFQ başlığını girin" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Currency" class="form-label">Para Birimi</label>
+                    <select asp-for="Currency" class="form-select" asp-items="@ViewBag.Currencies"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SectorId" class="form-label">Sektör <span class="required">*</span></label>
+                    <select asp-for="SectorId" class="form-select" asp-items="@ViewBag.Sectors">
+                        <option value="">Sektör seçin...</option>
+                    </select>
+                    <span asp-validation-for="SectorId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Visibility" class="form-label">Görünürlük</label>
+                    <select asp-for="Visibility" class="form-select" asp-items="@ViewBag.Visibilities"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="StartDate" class="form-label">Başlangıç Tarihi <span class="required">*</span></label>
+                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <span asp-validation-for="StartDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EndDate" class="form-label">Bitiş Tarihi <span class="required">*</span></label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-footer">
+            <a href="@Url.Action("Index")" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Geri
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>@(isEdit ? "Güncelle" : "Kaydet ve Devam Et")
+            </button>
+        </div>
+    </div>
+</form>
+
+@if (isEdit)
+{
+    <!-- Kalemler -->
+    <div class="items-card">
+        <div class="items-header">
+            <h5 class="mb-0"><i class="fas fa-list-ul me-2 text-info"></i>RFQ Kalemleri</h5>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#addItemCollapse">
+                <i class="fas fa-plus me-1"></i>Kalem Ekle
+            </button>
+        </div>
+        
+        <!-- Add Item Form (Collapsible) -->
+        <div class="collapse" id="addItemCollapse">
+            <div class="add-item-form">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Malzeme</label>
+                        <select id="materialSelect" class="form-select">
+                            <option value="">Manuel giriş...</option>
+                            @foreach (var mat in (dynamic)ViewBag.Materials)
+                            {
+                                <option value="@mat.Id" data-name="@mat.Name" data-unit="@mat.Unit">
+                                    @mat.Code - @mat.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Açıklama <span class="required">*</span></label>
+                        <input type="text" id="itemDescription" class="form-control" placeholder="Kalem açıklaması" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Miktar <span class="required">*</span></label>
+                        <input type="number" id="itemQuantity" class="form-control" step="0.01" placeholder="0.00" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Birim <span class="required">*</span></label>
+                        <input type="text" id="itemUnit" class="form-control" placeholder="Adet, Kg, vb." />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Teknik Özellikler</label>
+                        <input type="text" id="itemSpecs" class="form-control" placeholder="Opsiyonel" />
+                    </div>
+                    <div class="col-12 text-end">
+                        <button type="button" class="btn btn-success" onclick="addItem()">
+                            <i class="fas fa-plus me-1"></i>Ekle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Açıklama</th>
+                    <th>Miktar</th>
+                    <th>Birim</th>
+                    <th>Teknik Özellik</th>
+                    <th style="width: 80px;">İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="itemsBody">
+                @if (Model.Items.Any())
+                {
+                    var i = 1;
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr data-id="@item.Id">
+                            <td>@i</td>
+                            <td>
+                                <strong>@item.Description</strong>
+                                @if (!string.IsNullOrEmpty(item.MaterialName))
+                                {
+                                    <br /><small class="text-muted">@item.MaterialName</small>
+                                }
+                            </td>
+                            <td>@item.Quantity.ToString("N2")</td>
+                            <td>@item.Unit</td>
+                            <td>@(item.TechnicalSpecs ?? "-")</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-light text-danger" onclick="removeItem(@item.Id)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+                else
+                {
+                    <tr id="emptyRow">
+                        <td colspan="6" class="empty-items">
+                            <i class="fas fa-inbox mb-2" style="font-size: 24px;"></i>
+                            <p class="mb-0">Henüz kalem eklenmemiş</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Yayınla Butonu -->
+    @if (Model.Items.Any())
+    {
+        <div class="publish-section">
+            <h5><i class="fas fa-broadcast-tower me-2"></i>RFQ'yu Yayınla</h5>
+            <p class="text-muted mb-3">Tüm bilgileri kontrol ettiyseniz, RFQ'yu yayınlayarak tedarikçilerden teklif almaya başlayabilirsiniz.</p>
+            <button type="button" class="btn btn-success btn-lg" onclick="publishRfq()">
+                <i class="fas fa-paper-plane me-2"></i>Yayınla
+            </button>
+        </div>
+    }
+}
+
+@section Scripts {
+<script>
+    @if (isEdit)
+    {
+        <text>
+    const rfqId = @Model.Id;
+    
+    // Malzeme seçildiğinde alanları doldur
+    document.getElementById('materialSelect').addEventListener('change', function() {
+        const option = this.options[this.selectedIndex];
+        if (option.value) {
+            document.getElementById('itemDescription').value = option.dataset.name || '';
+            document.getElementById('itemUnit').value = option.dataset.unit || 'Adet';
+        }
+    });
+    
+    // Kalem ekle
+    function addItem() {
+        const materialId = document.getElementById('materialSelect').value || null;
+        const description = document.getElementById('itemDescription').value;
+        const quantity = parseFloat(document.getElementById('itemQuantity').value);
+        const unit = document.getElementById('itemUnit').value;
+        const specs = document.getElementById('itemSpecs').value;
+        
+        if (!description || !quantity || !unit) {
+            alert('Lütfen zorunlu alanları doldurun.');
+            return;
+        }
+        
+        fetch('@Url.Action("AddItem")?rfqId=' + rfqId, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                materialId: materialId ? parseInt(materialId) : null,
+                description,
+                quantity,
+                unit,
+                technicalSpecs: specs || null
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+    
+    // Kalem sil
+    function removeItem(itemId) {
+        if (!confirm('Bu kalemi silmek istediğinizden emin misiniz?')) return;
+        
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
+        fetch('@Url.Action("RemoveItem")', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: 'itemId=' + itemId + '&__RequestVerificationToken=' + token
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+    
+    // RFQ Yayınla
+    function publishRfq() {
+        if (!confirm('RFQ yayınlandıktan sonra düzenlenemez. Yayınlamak istediğinizden emin misiniz?')) return;
+        
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
+        fetch('@Url.Action("Publish")?id=' + rfqId, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: '__RequestVerificationToken=' + token
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '@Url.Action("Details")/' + rfqId;
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+        </text>
+    }
+</script>
+}

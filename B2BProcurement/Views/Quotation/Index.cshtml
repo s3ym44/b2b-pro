@@ -1,0 +1,368 @@
+@model IEnumerable<B2BProcurement.Controllers.QuotationListItemViewModel>
+@{
+    ViewData["Title"] = "Tekliflerim";
+    ViewData["PageTitle"] = "Verdiğim Teklifler";
+    ViewData["Breadcrumb"] = "Teklif";
+    
+    var quotationList = Model?.ToList() ?? new List<B2BProcurement.Controllers.QuotationListItemViewModel>();
+    var totalCount = quotationList.Count;
+    var draftCount = quotationList.Count(q => q.Status == B2BProcurement.Core.Enums.QuotationStatus.Draft);
+    var submittedCount = quotationList.Count(q => q.Status == B2BProcurement.Core.Enums.QuotationStatus.Submitted);
+    var approvedCount = quotationList.Count(q => q.Status == B2BProcurement.Core.Enums.QuotationStatus.Approved || q.Status == B2BProcurement.Core.Enums.QuotationStatus.PartiallyApproved);
+    var rejectedCount = quotationList.Count(q => q.Status == B2BProcurement.Core.Enums.QuotationStatus.Rejected);
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+<style>
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    .stat-card.active {
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stat-card.all { border-color: var(--primary); }
+    .stat-card.draft { border-color: #6B7280; }
+    .stat-card.submitted { border-color: #3B82F6; }
+    .stat-card.approved { border-color: #10B981; }
+    .stat-card.rejected { border-color: #EF4444; }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    .stat-label {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+    
+    /* Table Card */
+    .table-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .table-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table-card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    /* DataTable Custom */
+    .dataTables_wrapper {
+        padding: 20px;
+    }
+    
+    table.dataTable thead th {
+        background: var(--gray-50);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        padding: 14px 16px !important;
+        border-bottom: 1px solid var(--gray-200) !important;
+    }
+    
+    table.dataTable tbody td {
+        padding: 16px !important;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--gray-100) !important;
+    }
+    
+    table.dataTable tbody tr:hover {
+        background: var(--gray-50) !important;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .status-draft { background: #F3F4F6; color: #374151; }
+    .status-submitted { background: #DBEAFE; color: #1D4ED8; }
+    .status-approved { background: #DCFCE7; color: #166534; }
+    .status-rejected { background: #FEE2E2; color: #991B1B; }
+    .status-partial { background: #FEF3C7; color: #92400E; }
+    .status-withdrawn { background: #E5E7EB; color: #374151; }
+    
+    /* Info Cell */
+    .quotation-info h6 {
+        margin: 0 0 4px;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .quotation-meta {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+    
+    /* Amount */
+    .amount {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    .amount-currency {
+        font-size: 12px;
+        color: var(--gray-500);
+        font-weight: 400;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-500);
+        border: 1px solid var(--gray-200);
+        background: var(--white);
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        background: var(--gray-50);
+        color: var(--gray-700);
+    }
+    
+    .action-btn.primary:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--gray-100);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: var(--gray-400);
+        margin-bottom: 20px;
+    }
+</style>
+}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted mb-0">Vermiş olduğunuz tüm teklifleri takip edin</p>
+    </div>
+    <a href="@Url.Action("Incoming", "Rfq")" class="btn btn-primary">
+        <i class="fas fa-search me-2"></i>RFQ Ara
+    </a>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card all active" data-status="all">
+        <div class="stat-value">@totalCount</div>
+        <div class="stat-label">Tüm Teklifler</div>
+    </div>
+    <div class="stat-card draft" data-status="Draft">
+        <div class="stat-value">@draftCount</div>
+        <div class="stat-label">Taslak</div>
+    </div>
+    <div class="stat-card submitted" data-status="Submitted">
+        <div class="stat-value">@submittedCount</div>
+        <div class="stat-label">Gönderildi</div>
+    </div>
+    <div class="stat-card approved" data-status="Approved">
+        <div class="stat-value">@approvedCount</div>
+        <div class="stat-label">Onaylanan</div>
+    </div>
+    <div class="stat-card rejected" data-status="Rejected">
+        <div class="stat-value">@rejectedCount</div>
+        <div class="stat-label">Reddedilen</div>
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="table-card">
+    <div class="table-card-header">
+        <h5><i class="fas fa-file-invoice-dollar me-2"></i>Teklif Listesi</h5>
+    </div>
+    <div class="table-card-body">
+        @if (quotationList.Any())
+        {
+            <table id="quotationsTable" class="table table-hover mb-0" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Teklif</th>
+                        <th>Durum</th>
+                        <th>Toplam Tutar</th>
+                        <th>Kalem</th>
+                        <th>Geçerlilik</th>
+                        <th style="width: 100px;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var quotation in quotationList)
+                    {
+                        var statusClass = quotation.Status switch
+                        {
+                            B2BProcurement.Core.Enums.QuotationStatus.Draft => "status-draft",
+                            B2BProcurement.Core.Enums.QuotationStatus.Submitted => "status-submitted",
+                            B2BProcurement.Core.Enums.QuotationStatus.Approved => "status-approved",
+                            B2BProcurement.Core.Enums.QuotationStatus.Rejected => "status-rejected",
+                            B2BProcurement.Core.Enums.QuotationStatus.PartiallyApproved => "status-partial",
+                            B2BProcurement.Core.Enums.QuotationStatus.Withdrawn => "status-withdrawn",
+                            _ => "status-draft"
+                        };
+                        
+                        <tr data-status="@quotation.Status">
+                            <td>
+                                <div class="quotation-info">
+                                    <h6>@quotation.QuotationNumber</h6>
+                                    <div class="quotation-meta">
+                                        <i class="fas fa-file-alt me-1"></i>@quotation.RfqNumber
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge @statusClass">@quotation.StatusText</span>
+                            </td>
+                            <td>
+                                <div class="amount">@quotation.TotalAmount.ToString("N2") <span class="amount-currency">TRY</span></div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">@quotation.ItemCount kalem</span>
+                            </td>
+                            <td>
+                                @if (quotation.ValidUntil.HasValue)
+                                {
+                                    var isExpired = quotation.ValidUntil.Value < DateTime.Now;
+                                    <span class="@(isExpired ? "text-danger" : "text-muted")">
+                                        <i class="fas fa-calendar me-1"></i>@quotation.ValidUntil.Value.ToString("dd.MM.yyyy")
+                                        @if (isExpired)
+                                        {
+                                            <small>(Geçmiş)</small>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="@Url.Action("Details", new { id = quotation.Id })" class="action-btn primary" title="Detay">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (quotation.Status == B2BProcurement.Core.Enums.QuotationStatus.Draft)
+                                    {
+                                        <a href="@Url.Action("Edit", new { id = quotation.Id })" class="action-btn" title="Düzenle">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h5>Henüz teklif vermediniz</h5>
+                <p class="text-muted">Gelen RFQ'lara teklif vererek başlayın.</p>
+                <a href="@Url.Action("Incoming", "Rfq")" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i>RFQ Ara
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var table = $('#quotationsTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json',
+            },
+            order: [[0, 'desc']],
+            pageLength: 10
+        });
+        
+        // Stat Card Click Filter
+        $('.stat-card').on('click', function() {
+            $('.stat-card').removeClass('active');
+            $(this).addClass('active');
+            
+            var status = $(this).data('status');
+            
+            if (status === 'all') {
+                table.column(1).search('').draw();
+            } else {
+                var statusText = {
+                    'Draft': 'Taslak',
+                    'Submitted': 'Gönderildi',
+                    'Approved': 'Onaylandı',
+                    'Rejected': 'Reddedildi'
+                };
+                table.column(1).search(statusText[status] || '').draw();
+            }
+        });
+    });
+</script>
+}

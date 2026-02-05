@@ -1,0 +1,175 @@
+@* Pagination Partial View *@
+@model dynamic
+
+@{
+    int currentPage = Model?.CurrentPage ?? 1;
+    int totalPages = Model?.TotalPages ?? 1;
+    int totalItems = Model?.TotalItems ?? 0;
+    int pageSize = Model?.PageSize ?? 20;
+    string baseUrl = Model?.BaseUrl ?? "";
+    string queryString = Model?.QueryString ?? "";
+    
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+    
+    // Adjust if we're near the start or end
+    if (currentPage <= 3) endPage = Math.Min(5, totalPages);
+    if (currentPage >= totalPages - 2) startPage = Math.Max(1, totalPages - 4);
+}
+
+@if (totalPages > 1)
+{
+    <nav aria-label="Sayfalama" class="pagination-container">
+        <div class="pagination-info">
+            @{
+                var startItem = (currentPage - 1) * pageSize + 1;
+                var endItem = Math.Min(currentPage * pageSize, totalItems);
+            }
+            <span class="text-muted">
+                <strong>@startItem - @endItem</strong> / @totalItems kayıt gösteriliyor
+            </span>
+        </div>
+        
+        <ul class="pagination mb-0">
+            <!-- First Page -->
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@(baseUrl)?page=1@queryString" title="İlk Sayfa">
+                    <i class="fas fa-angles-left"></i>
+                </a>
+            </li>
+            
+            <!-- Previous Page -->
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@(baseUrl)?page=@(currentPage - 1)@queryString" title="Önceki">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            
+            <!-- Page Numbers -->
+            @if (startPage > 1)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+            
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="@(baseUrl)?page=@i@queryString">@i</a>
+                </li>
+            }
+            
+            @if (endPage < totalPages)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+            
+            <!-- Next Page -->
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link" href="@(baseUrl)?page=@(currentPage + 1)@queryString" title="Sonraki">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            
+            <!-- Last Page -->
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link" href="@(baseUrl)?page=@totalPages@queryString" title="Son Sayfa">
+                    <i class="fas fa-angles-right"></i>
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Page Size Selector -->
+        <div class="page-size-selector">
+            <select class="form-select form-select-sm" id="pageSizeSelect" onchange="changePageSize(this.value)">
+                <option value="10" selected="@(pageSize == 10)">10</option>
+                <option value="20" selected="@(pageSize == 20)">20</option>
+                <option value="50" selected="@(pageSize == 50)">50</option>
+                <option value="100" selected="@(pageSize == 100)">100</option>
+            </select>
+            <span class="text-muted ms-2">kayıt</span>
+        </div>
+    </nav>
+}
+
+<style>
+    .pagination-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 16px 0;
+    }
+    
+    .pagination-info {
+        font-size: 13px;
+    }
+    
+    .pagination {
+        gap: 4px;
+    }
+    
+    .pagination .page-link {
+        border: 1px solid var(--gray-200);
+        color: var(--gray-600);
+        padding: 8px 14px;
+        font-size: 13px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition-fast);
+    }
+    
+    .pagination .page-link:hover {
+        background: var(--gray-100);
+        border-color: var(--gray-300);
+        color: var(--gray-800);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: var(--gradient-primary);
+        border-color: transparent;
+        color: var(--white);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background: var(--gray-50);
+        color: var(--gray-400);
+        cursor: not-allowed;
+    }
+    
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+    }
+    
+    .page-size-selector .form-select {
+        width: auto;
+        padding: 6px 30px 6px 12px;
+        font-size: 13px;
+    }
+    
+    @@media (max-width: 767.98px) {
+        .pagination-container {
+            justify-content: center;
+        }
+        
+        .pagination-info,
+        .page-size-selector {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+function changePageSize(size) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('pageSize', size);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+</script>

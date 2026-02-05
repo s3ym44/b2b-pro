@@ -1,0 +1,436 @@
+@model B2BProcurement.Controllers.SupplierFormViewModel
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Tedarikçi Düzenle" : "Yeni Tedarikçi";
+    ViewData["PageTitle"] = isEdit ? "Tedarikçi Düzenle" : "Yeni Tedarikçi";
+    ViewData["Breadcrumb"] = "Tedarikçiler";
+}
+
+@section Styles {
+<style>
+    .form-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .form-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .form-body {
+        padding: 24px;
+    }
+    
+    .form-section {
+        margin-bottom: 32px;
+    }
+    
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .form-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+    
+    .form-label .required {
+        color: var(--danger);
+    }
+    
+    .form-control, .form-select {
+        border-radius: var(--radius-md);
+        border-color: var(--gray-200);
+        padding: 10px 14px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.1);
+    }
+    
+    .form-footer {
+        padding: 20px 24px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+    
+    /* Platform Member Search */
+    .platform-search-box {
+        background: linear-gradient(135deg, rgba(123, 47, 247, 0.05), rgba(139, 92, 246, 0.05));
+        border: 1px dashed var(--primary);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .platform-search-box .title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+    
+    .platform-search-box .title i {
+        margin-right: 8px;
+    }
+    
+    .platform-search-box .description {
+        font-size: 13px;
+        color: var(--gray-600);
+        margin-bottom: 16px;
+    }
+    
+    .search-input-group {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .search-input-group .form-control {
+        flex: 1;
+    }
+    
+    .platform-result {
+        margin-top: 16px;
+        padding: 16px;
+        background: var(--white);
+        border-radius: var(--radius-md);
+        display: none;
+    }
+    
+    .platform-result.show {
+        display: block;
+    }
+    
+    .platform-result.found {
+        border: 1px solid var(--success);
+    }
+    
+    .platform-result.not-found {
+        border: 1px solid var(--warning);
+    }
+    
+    .platform-result .result-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .platform-result .result-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    
+    .platform-result.found .result-icon {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    
+    .platform-result.not-found .result-icon {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+    
+    .platform-result .result-info h6 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+    
+    .platform-result .result-info p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+    
+    .platform-result .result-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        font-size: 13px;
+    }
+    
+    .platform-result .result-details .detail-item {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .platform-result .result-details .detail-label {
+        color: var(--gray-500);
+    }
+    
+    .platform-result .result-details .detail-value {
+        font-weight: 500;
+        color: var(--gray-800);
+    }
+</style>
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+        <div class="form-card">
+            <div class="form-header">
+                <h5><i class="fas fa-@(isEdit ? "edit" : "user-plus") me-2"></i>@ViewData["Title"]</h5>
+            </div>
+            
+            <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" id="supplierForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="SupplierCompanyId" id="supplierCompanyId" />
+                
+                <div class="form-body">
+                    <!-- Platform Üyesi Arama -->
+                    <div class="platform-search-box">
+                        <div class="title">
+                            <i class="fas fa-search"></i>Platform Üyesi Ara
+                        </div>
+                        <p class="description">
+                            Tedarikçi platformumuzda kayıtlı mı? Vergi numarası ile arayarak bilgilerini otomatik doldurun.
+                        </p>
+                        <div class="search-input-group">
+                            <input type="text" class="form-control" id="searchTaxNumber" 
+                                   placeholder="Vergi numarası girin (10-11 haneli)"
+                                   value="@Model.TaxNumber" maxlength="11">
+                            <button type="button" class="btn btn-primary" id="searchPlatformBtn">
+                                <i class="fas fa-search me-2"></i>Ara
+                            </button>
+                        </div>
+                        
+                        <!-- Arama Sonucu -->
+                        <div class="platform-result" id="platformResult">
+                            <div class="result-header">
+                                <div class="result-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="result-info">
+                                    <h6 id="resultCompanyName">-</h6>
+                                    <p id="resultMessage">-</p>
+                                </div>
+                            </div>
+                            <div class="result-details" id="resultDetails">
+                                <!-- Dinamik olarak doldurulacak -->
+                            </div>
+                            <div class="mt-3" id="resultActions">
+                                <button type="button" class="btn btn-success btn-sm" id="fillFormBtn">
+                                    <i class="fas fa-check me-2"></i>Bilgileri Kullan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Firma Bilgileri -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-building me-2"></i>Firma Bilgileri
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label asp-for="Name" class="form-label">
+                                    Tedarikçi Adı <span class="required">*</span>
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Şirket unvanını girin" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="TaxNumber" class="form-label">
+                                    Vergi Numarası
+                                </label>
+                                <input asp-for="TaxNumber" class="form-control" placeholder="10 veya 11 haneli" maxlength="11" />
+                                <span asp-validation-for="TaxNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SectorId" class="form-label">
+                                    Sektör <span class="required">*</span>
+                                </label>
+                                <select asp-for="SectorId" class="form-select" asp-items="@ViewBag.Sectors">
+                                    <option value="">Sektör seçin...</option>
+                                </select>
+                                <span asp-validation-for="SectorId" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- İletişim Bilgileri -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-address-card me-2"></i>İletişim Bilgileri
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label">
+                                    E-posta
+                                </label>
+                                <input asp-for="Email" type="email" class="form-control" placeholder="ornek@sirket.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Phone" class="form-label">
+                                    Telefon
+                                </label>
+                                <input asp-for="Phone" class="form-control" placeholder="+90 5XX XXX XX XX" />
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Platform Bağlantısı (varsa) -->
+                    @if (Model.IsPlatformMember && !string.IsNullOrEmpty(Model.SupplierCompanyName))
+                    {
+                        <div class="alert alert-success d-flex align-items-center">
+                            <i class="fas fa-link me-3" style="font-size: 24px;"></i>
+                            <div>
+                                <strong>Platform Üyesi</strong>
+                                <p class="mb-0 small">Bu tedarikçi platformda kayıtlı: <strong>@Model.SupplierCompanyName</strong></p>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="form-footer">
+                    <a href="@Url.Action("Index")" class="btn btn-light">
+                        <i class="fas fa-times me-2"></i>İptal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>@(isEdit ? "Güncelle" : "Kaydet")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    let foundCompanyData = null;
+    
+    // Platform üyesi ara
+    document.getElementById('searchPlatformBtn').addEventListener('click', function() {
+        const taxNumber = document.getElementById('searchTaxNumber').value.trim();
+        
+        if (!taxNumber || taxNumber.length < 10) {
+            alert('Lütfen geçerli bir vergi numarası girin (10-11 haneli).');
+            return;
+        }
+        
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Aranıyor...';
+        
+        fetch(`@Url.Action("SearchPlatformMember")?taxNumber=${taxNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('platformResult');
+                const resultIcon = resultDiv.querySelector('.result-icon i');
+                const resultName = document.getElementById('resultCompanyName');
+                const resultMessage = document.getElementById('resultMessage');
+                const resultDetails = document.getElementById('resultDetails');
+                const resultActions = document.getElementById('resultActions');
+                
+                if (data.found) {
+                    foundCompanyData = data;
+                    
+                    resultDiv.className = 'platform-result show found';
+                    resultIcon.className = 'fas fa-check';
+                    resultName.textContent = data.companyName;
+                    resultMessage.textContent = 'Platform üyesi bulundu!';
+                    
+                    resultDetails.innerHTML = `
+                        <div class="detail-item">
+                            <span class="detail-label">Sektör:</span>
+                            <span class="detail-value">${data.sectorName || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">E-posta:</span>
+                            <span class="detail-value">${data.email || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Telefon:</span>
+                            <span class="detail-value">${data.phone || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Şehir:</span>
+                            <span class="detail-value">${data.city || '-'}</span>
+                        </div>
+                    `;
+                    resultActions.style.display = 'block';
+                } else {
+                    foundCompanyData = null;
+                    
+                    resultDiv.className = 'platform-result show not-found';
+                    resultIcon.className = 'fas fa-info-circle';
+                    resultName.textContent = 'Bulunamadı';
+                    resultMessage.textContent = data.message || 'Bu vergi numarası ile kayıtlı üye bulunamadı.';
+                    resultDetails.innerHTML = '';
+                    resultActions.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                alert('Arama sırasında bir hata oluştu.');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search me-2"></i>Ara';
+            });
+    });
+    
+    // Bilgileri form'a doldur
+    document.getElementById('fillFormBtn').addEventListener('click', function() {
+        if (!foundCompanyData) return;
+        
+        document.getElementById('Name').value = foundCompanyData.companyName;
+        document.getElementById('TaxNumber').value = document.getElementById('searchTaxNumber').value;
+        document.getElementById('Email').value = foundCompanyData.email || '';
+        document.getElementById('Phone').value = foundCompanyData.phone || '';
+        document.getElementById('supplierCompanyId').value = foundCompanyData.companyId;
+        
+        if (foundCompanyData.sectorId) {
+            document.getElementById('SectorId').value = foundCompanyData.sectorId;
+        }
+        
+        // Görsel geri bildirim
+        this.innerHTML = '<i class="fas fa-check me-2"></i>Bilgiler Dolduruldu!';
+        this.className = 'btn btn-outline-success btn-sm';
+        this.disabled = true;
+    });
+    
+    // Vergi numarası input formatı
+    document.getElementById('searchTaxNumber').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 11);
+    });
+    
+    document.getElementById('TaxNumber').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 11);
+    });
+</script>
+}

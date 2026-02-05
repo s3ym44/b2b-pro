@@ -1,0 +1,259 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary me-2">
+                <i class="fas fa-download me-2"></i>Rapor İndir
+            </button>
+            <a href="/Rfq/Create" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Yeni RFQ
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="stat-value">24</div>
+            <div class="stat-label">Aktif RFQ</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> %12 artış
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <div class="stat-value">156</div>
+            <div class="stat-label">Gelen Teklifler</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> %8 artış
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="stat-value">42</div>
+            <div class="stat-label">Aktif Tedarikçi</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> %5 artış
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #00d4ff 0%, #0ea5e9 100%);">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div class="stat-value">328</div>
+            <div class="stat-label">Toplam Malzeme</div>
+            <div class="stat-change negative">
+                <i class="fas fa-arrow-down"></i> %2 azalış
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Son RFQ'lar -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Son Teklif Talepleri</h5>
+                <a href="/Rfq" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>RFQ No</th>
+                                <th>Başlık</th>
+                                <th>Durum</th>
+                                <th>Teklif Sayısı</th>
+                                <th>Bitiş Tarihi</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>RFQ-2026-0024</strong></td>
+                                <td>2026 Yılı Otomotiv Yedek Parça</td>
+                                <td><span class="status-badge published"><i class="fas fa-circle"></i> Yayında</span></td>
+                                <td>5</td>
+                                <td>15.02.2026</td>
+                                <td><a href="#" class="btn btn-sm btn-light"><i class="fas fa-eye"></i></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>RFQ-2026-0023</strong></td>
+                                <td>Elektronik Bileşen Alımı</td>
+                                <td><span class="status-badge published"><i class="fas fa-circle"></i> Yayında</span></td>
+                                <td>8</td>
+                                <td>10.02.2026</td>
+                                <td><a href="#" class="btn btn-sm btn-light"><i class="fas fa-eye"></i></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>RFQ-2026-0022</strong></td>
+                                <td>Ambalaj Malzemesi Tedariği</td>
+                                <td><span class="status-badge pending"><i class="fas fa-circle"></i> Değerlendirme</span></td>
+                                <td>12</td>
+                                <td>05.02.2026</td>
+                                <td><a href="#" class="btn btn-sm btn-light"><i class="fas fa-eye"></i></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>RFQ-2026-0021</strong></td>
+                                <td>Makine Yağı Alımı</td>
+                                <td><span class="status-badge approved"><i class="fas fa-circle"></i> Tamamlandı</span></td>
+                                <td>6</td>
+                                <td>01.02.2026</td>
+                                <td><a href="#" class="btn btn-sm btn-light"><i class="fas fa-eye"></i></a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hızlı İşlemler & Bildirimler -->
+    <div class="col-xl-4">
+        <!-- Hızlı İşlemler -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Hızlı İşlemler</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/Rfq/Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Yeni RFQ Oluştur
+                    </a>
+                    <a href="/Materials/Create" class="btn btn-outline-primary">
+                        <i class="fas fa-cube me-2"></i>Malzeme Ekle
+                    </a>
+                    <a href="/Suppliers/Create" class="btn btn-outline-primary">
+                        <i class="fas fa-truck me-2"></i>Tedarikçi Ekle
+                    </a>
+                    <a href="/Rfq/Incoming" class="btn btn-outline-primary">
+                        <i class="fas fa-inbox me-2"></i>Gelen Talepleri Gör
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Son Bildirimler -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Son Bildirimler</h5>
+                <a href="/Notifications" class="text-primary" style="font-size: 12px;">Tümü</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="notification-list">
+                    <a href="#" class="notification-item-simple">
+                        <div class="notification-dot bg-gradient-primary"></div>
+                        <div class="notification-content">
+                            <p>XYZ Ltd. yeni teklif gönderdi</p>
+                            <span>5 dakika önce</span>
+                        </div>
+                    </a>
+                    <a href="#" class="notification-item-simple">
+                        <div class="notification-dot bg-gradient-success"></div>
+                        <div class="notification-content">
+                            <p>RFQ-2026-0020 tamamlandı</p>
+                            <span>1 saat önce</span>
+                        </div>
+                    </a>
+                    <a href="#" class="notification-item-simple">
+                        <div class="notification-dot bg-gradient-warning"></div>
+                        <div class="notification-content">
+                            <p>RFQ-2026-0019 süresi dolmak üzere</p>
+                            <span>3 saat önce</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 4px;
+    }
+    
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        font-size: 13px;
+    }
+    
+    .breadcrumb-item a {
+        color: var(--gray-500);
+    }
+    
+    .breadcrumb-item.active {
+        color: var(--gray-600);
+    }
+    
+    .notification-list {
+        padding: 0;
+    }
+    
+    .notification-item-simple {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--gray-100);
+        transition: var(--transition-fast);
+    }
+    
+    .notification-item-simple:hover {
+        background: var(--gray-50);
+    }
+    
+    .notification-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-top: 6px;
+        flex-shrink: 0;
+    }
+    
+    .notification-item-simple .notification-content p {
+        margin: 0 0 2px;
+        font-size: 13px;
+        color: var(--gray-700);
+    }
+    
+    .notification-item-simple .notification-content span {
+        font-size: 11px;
+        color: var(--gray-500);
+    }
+</style>
+}

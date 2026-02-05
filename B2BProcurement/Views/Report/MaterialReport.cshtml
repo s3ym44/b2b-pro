@@ -1,0 +1,457 @@
+@model B2BProcurement.Controllers.MaterialReportViewModel
+@{
+    ViewData["Title"] = "Malzeme Raporu";
+    ViewData["PageTitle"] = "Malzeme Analiz Raporu";
+    ViewData["Breadcrumb"] = "Raporlar";
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+<style>
+    /* Summary Cards */
+    .summary-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .summary-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .summary-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+    
+    .summary-icon.blue { background: #DBEAFE; color: #2563EB; }
+    .summary-icon.green { background: #DCFCE7; color: #16A34A; }
+    
+    .summary-content {
+        flex: 1;
+    }
+    
+    .summary-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    .summary-label {
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+    
+    /* Charts Row */
+    .charts-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .chart-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .chart-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .chart-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .chart-body {
+        padding: 24px;
+    }
+    
+    /* Price Trend Card */
+    .trend-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .trend-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .trend-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .trend-body {
+        padding: 24px;
+    }
+    
+    .trend-legend {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+    }
+    
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    /* Table Card */
+    .table-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .table-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .table-card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    /* DataTable */
+    .dataTables_wrapper {
+        padding: 20px;
+    }
+    
+    table.dataTable thead th {
+        background: var(--gray-50);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        padding: 14px 16px !important;
+    }
+    
+    table.dataTable tbody td {
+        padding: 16px !important;
+        vertical-align: middle;
+    }
+    
+    /* Rank Badge */
+    .rank-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+    }
+    
+    .rank-badge.top { background: #FEF3C7; color: #D97706; }
+    .rank-badge.default { background: var(--gray-100); color: var(--gray-600); }
+    
+    /* Quantity Bar */
+    .quantity-bar-container {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .quantity-bar {
+        height: 8px;
+        background: var(--gray-200);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .quantity-bar-fill {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 4px;
+    }
+    
+    .quantity-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 4px;
+    }
+</style>
+}
+
+<!-- Summary Row -->
+<div class="summary-row">
+    <div class="summary-card">
+        <div class="summary-icon blue"><i class="fas fa-boxes"></i></div>
+        <div class="summary-content">
+            <div class="summary-value">@Model.TotalMaterials</div>
+            <div class="summary-label">Farklı Malzeme</div>
+        </div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon green"><i class="fas fa-clipboard-list"></i></div>
+        <div class="summary-content">
+            <div class="summary-value">@Model.TotalRequests</div>
+            <div class="summary-label">Toplam Talep</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-row">
+    <!-- Top Materials Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h5><i class="fas fa-chart-bar me-2"></i>En Çok Talep Edilen Malzemeler</h5>
+        </div>
+        <div class="chart-body">
+            <canvas id="topMaterialsChart" height="300"></canvas>
+        </div>
+    </div>
+    
+    <!-- Request Distribution -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h5><i class="fas fa-chart-pie me-2"></i>Talep Dağılımı</h5>
+        </div>
+        <div class="chart-body">
+            <canvas id="distributionChart" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Price Trend -->
+@if (Model.PriceTrends.Any())
+{
+    <div class="trend-card">
+        <div class="trend-header">
+            <h5><i class="fas fa-chart-line me-2"></i>Fiyat Trendi (Son 3 Malzeme)</h5>
+        </div>
+        <div class="trend-body">
+            <div class="trend-legend">
+                @{ var colors = new[] { "#8B5CF6", "#10B981", "#F59E0B" }; var idx = 0; }
+                @foreach (var trend in Model.PriceTrends)
+                {
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: @colors[idx % 3]"></div>
+                        <span>@trend.MaterialName</span>
+                    </div>
+                    idx++;
+                }
+            </div>
+            <canvas id="priceTrendChart" height="250"></canvas>
+        </div>
+    </div>
+}
+
+<!-- Materials Table -->
+<div class="table-card">
+    <div class="table-card-header">
+        <h5><i class="fas fa-list me-2"></i>Malzeme Detayları</h5>
+    </div>
+    <table id="materialsTable" class="table table-hover mb-0" style="width:100%">
+        <thead>
+            <tr>
+                <th style="width: 60px;">Sıra</th>
+                <th>Malzeme</th>
+                <th>Birim</th>
+                <th>Talep Sayısı</th>
+                <th>Toplam Miktar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var rank = 1;
+                var maxRequests = Model.TopMaterials.Any() ? Model.TopMaterials.Max(m => m.RequestCount) : 1;
+            }
+            @foreach (var material in Model.TopMaterials)
+            {
+                var isTop = rank <= 3;
+                var barWidth = (double)material.RequestCount / maxRequests * 100;
+                
+                <tr>
+                    <td>
+                        <span class="rank-badge @(isTop ? "top" : "default")">@rank</span>
+                    </td>
+                    <td>
+                        <strong>@material.MaterialName</strong>
+                    </td>
+                    <td>
+                        <span class="text-muted">@material.Unit</span>
+                    </td>
+                    <td>
+                        <div class="quantity-bar-container">
+                            <div class="quantity-text">@material.RequestCount talep</div>
+                            <div class="quantity-bar">
+                                <div class="quantity-bar-fill" style="width: @barWidth%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="fw-medium">@material.TotalQuantity.ToString("N2") @material.Unit</span>
+                    </td>
+                </tr>
+                rank++;
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // DataTable
+    $(document).ready(function() {
+        $('#materialsTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json'
+            },
+            order: [[3, 'desc']],
+            pageLength: 10
+        });
+    });
+    
+    // Top Materials Chart
+    const topCtx = document.getElementById('topMaterialsChart').getContext('2d');
+    new Chart(topCtx, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopMaterialsChart.Select(m => m.Label))),
+            datasets: [{
+                label: 'Talep Sayısı',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopMaterialsChart.Select(m => m.Value))),
+                backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+    
+    // Distribution Chart
+    const distCtx = document.getElementById('distributionChart').getContext('2d');
+    new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopMaterialsChart.Select(m => m.Label))),
+            datasets: [{
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopMaterialsChart.Select(m => m.Value))),
+                backgroundColor: [
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(236, 72, 153, 0.8)',
+                    'rgba(20, 184, 166, 0.8)',
+                    'rgba(107, 114, 128, 0.8)',
+                    'rgba(251, 191, 36, 0.8)',
+                    'rgba(99, 102, 241, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 12, font: { size: 11 } }
+                }
+            }
+        }
+    });
+    
+    // Price Trend Chart
+    @if (Model.PriceTrends.Any())
+    {
+        <text>
+        const trendCtx = document.getElementById('priceTrendChart').getContext('2d');
+        const trendColors = ['#8B5CF6', '#10B981', '#F59E0B'];
+        const datasets = [];
+        
+        @for (var i = 0; i < Model.PriceTrends.Count; i++)
+        {
+            var trend = Model.PriceTrends[i];
+            <text>
+            datasets.push({
+                label: '@trend.MaterialName',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(trend.PricePoints.Select(p => p.AvgPrice))),
+                borderColor: trendColors[@i],
+                backgroundColor: trendColors[@i] + '20',
+                fill: true,
+                tension: 0.4
+            });
+            </text>
+        }
+        
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PriceTrends.FirstOrDefault()?.PricePoints.Select(p => p.Label) ?? new List<string>())),
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: value => value.toLocaleString('tr-TR') + ' ₺'
+                        }
+                    }
+                }
+            }
+        });
+        </text>
+    }
+</script>
+}

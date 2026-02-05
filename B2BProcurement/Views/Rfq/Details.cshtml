@@ -1,0 +1,494 @@
+@model B2BProcurement.Controllers.RfqDetailsViewModel
+@{
+    ViewData["Title"] = "RFQ Detayı";
+    ViewData["PageTitle"] = Model.Title;
+    ViewData["Breadcrumb"] = "RFQ";
+    
+    var statusClass = Model.Status switch
+    {
+        B2BProcurement.Core.Enums.RfqStatus.Draft => "status-draft",
+        B2BProcurement.Core.Enums.RfqStatus.Published => "status-published",
+        B2BProcurement.Core.Enums.RfqStatus.Closed => "status-closed",
+        B2BProcurement.Core.Enums.RfqStatus.Cancelled => "status-cancelled",
+        _ => "status-draft"
+    };
+    var statusText = Model.Status switch
+    {
+        B2BProcurement.Core.Enums.RfqStatus.Draft => "Taslak",
+        B2BProcurement.Core.Enums.RfqStatus.Published => "Yayında",
+        B2BProcurement.Core.Enums.RfqStatus.Closed => "Kapalı",
+        B2BProcurement.Core.Enums.RfqStatus.Cancelled => "İptal",
+        _ => "Taslak"
+    };
+    var daysLeft = (Model.EndDate - DateTime.Now).Days;
+}
+
+@section Styles {
+<style>
+    /* Summary Card */
+    .summary-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .summary-header {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, var(--primary), #8B5CF6);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .summary-title h3 {
+        margin: 0 0 8px;
+        font-weight: 700;
+    }
+    
+    .summary-title p {
+        margin: 0;
+        opacity: 0.8;
+        font-size: 14px;
+    }
+    
+    .summary-status {
+        text-align: right;
+    }
+    
+    .status-badge-lg {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .status-draft { background: #FEF3C7; color: #92400E; }
+    .status-published { background: #DCFCE7; color: #166534; }
+    .status-closed { background: #E5E7EB; color: #374151; }
+    .status-cancelled { background: #FEE2E2; color: #991B1B; }
+    
+    .summary-body {
+        padding: 24px 32px;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+    }
+    
+    .info-item {
+        padding: 16px;
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+    }
+    
+    .info-label {
+        font-size: 12px;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    
+    .info-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .info-value.primary { color: var(--primary); }
+    .info-value.success { color: var(--success); }
+    .info-value.warning { color: var(--warning); }
+    .info-value.danger { color: var(--danger); }
+    
+    /* Section Card */
+    .section-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
+    }
+    
+    .section-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .section-header .count-badge {
+        background: var(--primary);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    
+    .section-body {
+        padding: 24px;
+    }
+    
+    /* Items Table */
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .items-table th {
+        background: var(--gray-50);
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .items-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+    
+    .items-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .items-table tr:hover {
+        background: var(--gray-50);
+    }
+    
+    /* Quotation Card */
+    .quotation-card {
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+    
+    .quotation-header {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .quotation-company {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .company-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+    }
+    
+    .company-name { font-weight: 600; color: var(--gray-800); }
+    .company-date { font-size: 12px; color: var(--gray-500); }
+    
+    .quotation-total {
+        text-align: right;
+    }
+    
+    .total-label { font-size: 12px; color: var(--gray-500); }
+    .total-value { font-size: 20px; font-weight: 700; color: var(--success); }
+    
+    .quotation-body {
+        padding: 16px 20px;
+    }
+    
+    /* Action Buttons */
+    .action-bar {
+        display: flex;
+        gap: 12px;
+        padding: 20px 24px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-100);
+    }
+    
+    .btn-action {
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray-500);
+    }
+    
+    .empty-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        color: var(--gray-300);
+    }
+</style>
+}
+
+<!-- Back Button -->
+<div class="mb-4">
+    <a href="@Url.Action("Index")" class="btn btn-light">
+        <i class="fas fa-arrow-left me-2"></i>RFQ Listesine Dön
+    </a>
+</div>
+
+<!-- Summary Card -->
+<div class="summary-card">
+    <div class="summary-header">
+        <div class="summary-title">
+            <h3>@Model.Title</h3>
+            <p><i class="fas fa-industry me-1"></i>@Model.SectorName <span class="mx-2">|</span> <i class="fas fa-building me-1"></i>@Model.CompanyName</p>
+        </div>
+        <div class="summary-status">
+            <span class="status-badge-lg @statusClass">@statusText</span>
+            @if (Model.Status == B2BProcurement.Core.Enums.RfqStatus.Published && daysLeft > 0)
+            {
+                <p class="mt-2 mb-0" style="font-size: 13px;">
+                    <i class="fas fa-clock me-1"></i>@daysLeft gün kaldı
+                </p>
+            }
+        </div>
+    </div>
+    <div class="summary-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Başlangıç</div>
+                <div class="info-value">@Model.StartDate.ToString("dd.MM.yyyy")</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Bitiş</div>
+                <div class="info-value @(daysLeft <= 3 && Model.Status == B2BProcurement.Core.Enums.RfqStatus.Published ? "danger" : "")">@Model.EndDate.ToString("dd.MM.yyyy")</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Kalem Sayısı</div>
+                <div class="info-value primary">@Model.Items?.Count</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gelen Cevap</div>
+                <div class="info-value success">@Model.Quotations?.Count</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Bar -->
+    @if (Model.IsOwner)
+    {
+        <div class="action-bar">
+            @if (Model.Status == B2BProcurement.Core.Enums.RfqStatus.Draft)
+            {
+                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-action btn-primary">
+                    <i class="fas fa-edit me-2"></i>Düzenle
+                </a>
+                <form asp-action="Publish" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-action btn-success" onclick="return confirm('RFQ yayınlansın mı?')">
+                        <i class="fas fa-paper-plane me-2"></i>Yayınla
+                    </button>
+                </form>
+            }
+            @if (Model.Status == B2BProcurement.Core.Enums.RfqStatus.Published)
+            {
+                <form asp-action="Close" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-action btn-secondary" onclick="return confirm('RFQ kapatılsın mı?')">
+                        <i class="fas fa-check-circle me-2"></i>Kapat
+                    </button>
+                </form>
+            }
+            @if (Model.Status != B2BProcurement.Core.Enums.RfqStatus.Cancelled && Model.Status != B2BProcurement.Core.Enums.RfqStatus.Closed)
+            {
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-action btn-outline-danger" onclick="return confirm('RFQ iptal edilsin mi?')">
+                        <i class="fas fa-times me-2"></i>İptal Et
+                    </button>
+                </form>
+            }
+            @if (Model.Quotations?.Count > 0)
+            {
+                <a href="@Url.Action("Comparison", new { id = Model.Id })" class="btn btn-action btn-info ms-auto">
+                    <i class="fas fa-chart-bar me-2"></i>Karşılaştır
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Items Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <h5>
+                    <i class="fas fa-list-ul"></i>Kalemler
+                    <span class="count-badge">@Model.Items?.Count</span>
+                </h5>
+            </div>
+            <div class="section-body p-0">
+                @if (Model.Items?.Any() == true)
+                {
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Açıklama</th>
+                                <th>Miktar</th>
+                                <th>Birim</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var idx = 0; }
+                            @foreach (var item in Model.Items)
+                            {
+                                idx++;
+                                <tr>
+                                    <td>@idx</td>
+                                    <td>
+                                        <strong>@item.Description</strong>
+                                        @if (!string.IsNullOrEmpty(item.TechnicalSpecs))
+                                        {
+                                            <br><small class="text-muted">@item.TechnicalSpecs</small>
+                                        }
+                                    </td>
+                                    <td>@item.Quantity.ToString("N2")</td>
+                                    <td>@item.Unit</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                        <p>Henüz kalem eklenmemiş</p>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- Quotations Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <h5>
+                    <i class="fas fa-file-invoice-dollar"></i>Gelen Teklifler
+                    <span class="count-badge">@Model.Quotations?.Count</span>
+                </h5>
+                @if (Model.Quotations?.Count > 1)
+                {
+                    <a href="@Url.Action("Comparison", new { id = Model.Id })" class="btn btn-sm btn-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Karşılaştır
+                    </a>
+                }
+            </div>
+            <div class="section-body">
+                @if (Model.Quotations?.Any() == true)
+                {
+                    @foreach (var quotation in Model.Quotations)
+                    {
+                        var initials = quotation.SupplierName?.Length >= 2 ? quotation.SupplierName.Substring(0, 2).ToUpper() : "??";
+                        <div class="quotation-card">
+                            <div class="quotation-header">
+                                <div class="quotation-company">
+                                    <div class="company-avatar">@initials</div>
+                                    <div>
+                                        <div class="company-name">@quotation.SupplierName</div>
+                                        <div class="company-date">@quotation.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+                                <div class="quotation-total">
+                                    <div class="total-label">Toplam Tutar</div>
+                                    <div class="total-value">@quotation.TotalAmount.ToString("N2") @Model.Currency</div>
+                                </div>
+                            </div>
+                            <div class="quotation-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted">@quotation.ItemCount kalem teklif</span>
+                                        @if (quotation.ValidUntil.HasValue)
+                                        {
+                                            <span class="ms-3"><i class="fas fa-clock me-1"></i>Geçerlilik: @quotation.ValidUntil.Value.ToString("dd.MM.yyyy")</span>
+                                        }
+                                    </div>
+                                    <a href="@Url.Action("Details", "Quotation", new { id = quotation.Id })" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>Detay
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                        <p>Henüz teklif gelmedi</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- RFQ Info -->
+        <div class="section-card">
+            <div class="section-header">
+                <h5><i class="fas fa-info-circle"></i>RFQ Bilgileri</h5>
+            </div>
+            <div class="section-body">
+                <div class="mb-3">
+                    <small class="text-muted">RFQ Numarası</small>
+                    <div class="fw-bold">@Model.RfqNumber</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Para Birimi</small>
+                    <div class="fw-bold">@Model.Currency</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Görünürlük</small>
+                    <div class="fw-bold">
+                        @(Model.Visibility switch {
+                            B2BProcurement.Core.Enums.RfqVisibility.MySuppliers => "Sadece Tedarikçilerim",
+                            B2BProcurement.Core.Enums.RfqVisibility.AllSector => "Tüm Sektör",
+                            B2BProcurement.Core.Enums.RfqVisibility.Selected => "Seçili Tedarikçiler",
+                            _ => "Tüm Sektör"
+                        })
+                    </div>
+                </div>
+                <div>
+                    <small class="text-muted">Oluşturulma</small>
+                    <div class="fw-bold">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

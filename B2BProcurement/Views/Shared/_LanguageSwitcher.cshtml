@@ -1,0 +1,95 @@
+@using Microsoft.AspNetCore.Builder
+@using Microsoft.AspNetCore.Localization
+@using Microsoft.Extensions.Options
+@inject IOptions<RequestLocalizationOptions> LocOptions
+
+@{
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    var currentCulture = requestCulture?.RequestCulture.UICulture.Name ?? "tr-TR";
+    var cultures = new[]
+    {
+        new { Code = "tr-TR", Name = "Türkçe", Flag = "🇹🇷" },
+        new { Code = "en-US", Name = "English", Flag = "🇺🇸" }
+    };
+    var currentCultureInfo = cultures.FirstOrDefault(c => c.Code == currentCulture) ?? cultures[0];
+}
+
+<div class="language-dropdown dropdown">
+    <button class="btn btn-link dropdown-toggle p-2" type="button" 
+            id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="flag">@currentCultureInfo.Flag</span>
+        <span class="lang-name d-none d-md-inline ms-1">@currentCultureInfo.Name</span>
+    </button>
+    
+    <ul class="dropdown-menu dropdown-menu-end language-menu" aria-labelledby="languageDropdown">
+        @foreach (var culture in cultures)
+        {
+            var isActive = culture.Code == currentCulture;
+            <li>
+                <form asp-controller="Culture" asp-action="SetCulture" method="post">
+                    <input type="hidden" name="culture" value="@culture.Code" />
+                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                    <button type="submit" class="dropdown-item @(isActive ? "active" : "")">
+                        <span class="flag me-2">@culture.Flag</span>
+                        <span>@culture.Name</span>
+                        @if (isActive)
+                        {
+                            <i class="fas fa-check ms-auto"></i>
+                        }
+                    </button>
+                </form>
+            </li>
+        }
+    </ul>
+</div>
+
+<style>
+.language-dropdown .btn-link {
+    color: var(--gray-600);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.language-dropdown .btn-link:hover {
+    color: var(--primary);
+}
+
+.language-dropdown .flag {
+    font-size: 18px;
+}
+
+.language-menu {
+    min-width: 160px;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-radius: 8px;
+    padding: 8px 0;
+}
+
+.language-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--gray-700);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.language-menu .dropdown-item:hover {
+    background: var(--gray-100);
+}
+
+.language-menu .dropdown-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.language-menu .dropdown-item .fa-check {
+    color: var(--primary);
+}
+</style>

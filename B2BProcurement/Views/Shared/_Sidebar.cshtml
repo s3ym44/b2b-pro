@@ -1,0 +1,176 @@
+@* Sidebar Partial View *@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+}
+
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <a href="/" class="sidebar-brand">
+            <i class="fas fa-cube brand-icon"></i>
+            <span class="brand-text">B2B<span class="text-gradient">Procurement</span></span>
+        </a>
+        <button class="sidebar-toggle d-lg-none" id="sidebarToggleClose">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="sidebar-body">
+        <ul class="sidebar-nav">
+            <!-- Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "home" ? "active" : "")" href="/">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            
+            <!-- Malzemeler -->
+            <li class="nav-item has-submenu">
+                <a class="nav-link @(currentController == "material" ? "active" : "")" 
+                   href="#materialsSubmenu" 
+                   data-bs-toggle="collapse" 
+                   aria-expanded="@(currentController == "material" ? "true" : "false")">
+                    <i class="fas fa-boxes-stacked"></i>
+                    <span>Malzemeler</span>
+                    <i class="fas fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu collapse @(currentController == "material" ? "show" : "")" id="materialsSubmenu">
+                    <li>
+                        <a href="/Material" class="@(currentController == "material" && currentAction == "index" ? "active" : "")">
+                            <i class="fas fa-list me-2"></i>Malzeme Listesi
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Material/Create" class="@(currentController == "material" && currentAction == "create" ? "active" : "")">
+                            <i class="fas fa-plus me-2"></i>Yeni Malzeme
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Tedarikçiler -->
+            <li class="nav-item has-submenu">
+                <a class="nav-link @(currentController == "supplier" ? "active" : "")" 
+                   href="#suppliersSubmenu" 
+                   data-bs-toggle="collapse" 
+                   aria-expanded="@(currentController == "supplier" ? "true" : "false")">
+                    <i class="fas fa-truck"></i>
+                    <span>Tedarikçiler</span>
+                    <i class="fas fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu collapse @(currentController == "supplier" ? "show" : "")" id="suppliersSubmenu">
+                    <li>
+                        <a href="/Supplier" class="@(currentController == "supplier" && currentAction == "index" ? "active" : "")">
+                            <i class="fas fa-list me-2"></i>Tedarikçi Listesi
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Supplier/Create" class="@(currentController == "supplier" && currentAction == "create" ? "active" : "")">
+                            <i class="fas fa-plus me-2"></i>Yeni Tedarikçi
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <li class="nav-divider"></li>
+            
+            <!-- Tekliflerim (RFQ) -->
+            <li class="nav-item has-submenu">
+                <a class="nav-link @(currentController == "rfq" ? "active" : "")" 
+                   href="#rfqSubmenu" 
+                   data-bs-toggle="collapse" 
+                   aria-expanded="@(currentController == "rfq" ? "true" : "false")">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Tekliflerim</span>
+                    <i class="fas fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu collapse @(currentController == "rfq" ? "show" : "")" id="rfqSubmenu">
+                    <li>
+                        <a href="/Rfq" class="@(currentController == "rfq" && currentAction == "index" ? "active" : "")">
+                            <i class="fas fa-paper-plane me-2"></i>Oluşturduklarım
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Rfq/Create" class="@(currentController == "rfq" && currentAction == "create" ? "active" : "")">
+                            <i class="fas fa-plus me-2"></i>Yeni RFQ Oluştur
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Quotation" class="@(currentController == "quotation" && currentAction == "index" ? "active" : "")">
+                            <i class="fas fa-reply me-2"></i>Gönderdiğim Teklifler
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Gelen Teklifler -->
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "rfq" && currentAction == "incoming" ? "active" : "")" href="/Rfq/Incoming">
+                    <i class="fas fa-inbox"></i>
+                    <span>Gelen Teklifler</span>
+                    <span class="badge bg-gradient-primary ms-auto" id="incomingCount">Yeni</span>
+                </a>
+            </li>
+            
+            <!-- Teklif Karşılaştırma - RFQ detayından erişilir -->
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "rfq" && currentAction == "comparison" ? "active" : "")" href="/Rfq" title="RFQ listesinden karşılaştırma yapabilirsiniz">
+                    <i class="fas fa-scale-balanced"></i>
+                    <span>Teklif Karşılaştırma</span>
+                </a>
+            </li>
+            
+            <li class="nav-divider"></li>
+            
+            <!-- Raporlar -->
+            <li class="nav-item has-submenu">
+                <a class="nav-link @(currentController == "report" ? "active" : "")" 
+                   href="#reportsSubmenu" 
+                   data-bs-toggle="collapse" 
+                   aria-expanded="@(currentController == "report" ? "true" : "false")">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Raporlar</span>
+                    <i class="fas fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu collapse @(currentController == "report" ? "show" : "")" id="reportsSubmenu">
+                    <li><a href="/Report/RfqReport"><i class="fas fa-file-lines me-2"></i>RFQ Raporu</a></li>
+                    <li><a href="/Report/QuotationReport"><i class="fas fa-file-contract me-2"></i>Teklif Raporu</a></li>
+                    <li><a href="/Report/SupplierPerformance"><i class="fas fa-chart-line me-2"></i>Tedarikçi Performansı</a></li>
+                </ul>
+            </li>
+            
+            <!-- Ayarlar (Yakında) -->
+            <li class="nav-item has-submenu">
+                <a class="nav-link" 
+                   href="#settingsSubmenu" 
+                   data-bs-toggle="collapse" 
+                   aria-expanded="false">
+                    <i class="fas fa-gear"></i>
+                    <span>Ayarlar</span>
+                    <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Yakında</span>
+                </a>
+                <ul class="submenu collapse" id="settingsSubmenu">
+                    <li><a href="#" class="text-muted"><i class="fas fa-building me-2"></i>Şirket Bilgileri</a></li>
+                    <li><a href="#" class="text-muted"><i class="fas fa-users me-2"></i>Kullanıcı Yönetimi</a></li>
+                    <li><a href="#" class="text-muted"><i class="fas fa-crown me-2"></i>Paket Bilgisi</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="sidebar-footer">
+        <div class="package-info glass-card">
+            <div class="package-icon">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div class="package-details">
+                <span class="package-name">@(ViewBag.PackageName ?? "Premium Paket")</span>
+                <span class="package-usage">@(ViewBag.PackageUsage ?? "85")% kullanıldı</span>
+            </div>
+            <div class="package-progress">
+                <div class="progress-bar" style="width: @(ViewBag.PackageUsage ?? 85)%"></div>
+            </div>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,184 @@
+@* Delete Confirm Modal - Reusable *@
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <div class="modal-icon bg-danger-light">
+                    <i class="fas fa-trash-alt text-danger"></i>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <h5 class="modal-title mb-2" id="deleteConfirmModalLabel">Silme Onayı</h5>
+                <p class="text-muted mb-0" id="deleteConfirmMessage">
+                    Bu kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                </p>
+                <div class="delete-item-info mt-3" id="deleteItemInfo" style="display: none;">
+                    <div class="alert alert-light mb-0">
+                        <strong id="deleteItemName"></strong>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>İptal
+                </button>
+                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn" onclick="executeDelete()">
+                    <i class="fas fa-trash-alt me-2"></i>Sil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #deleteConfirmModal .modal-content {
+        border: none;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    #deleteConfirmModal .modal-header {
+        justify-content: center;
+        position: relative;
+        padding-top: 30px;
+    }
+    
+    #deleteConfirmModal .modal-header .btn-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+    }
+    
+    #deleteConfirmModal .modal-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    }
+    
+    .bg-danger-light {
+        background: rgba(239, 68, 68, 0.1);
+    }
+    
+    #deleteConfirmModal .modal-title {
+        color: var(--gray-800);
+        font-weight: 600;
+    }
+    
+    #deleteConfirmModal .modal-footer {
+        padding-bottom: 24px;
+    }
+</style>
+
+<script>
+let deleteConfig = {
+    url: '',
+    method: 'POST',
+    redirectUrl: '',
+    onSuccess: null
+};
+
+// Show delete confirmation modal
+// Options: url, method, itemName, message, redirectUrl, onSuccess
+function showDeleteConfirm(options) {
+    deleteConfig = {
+        url: options.url || '',
+        method: options.method || 'POST',
+        redirectUrl: options.redirectUrl || '',
+        onSuccess: options.onSuccess || null
+    };
+    
+    // Update message
+    if (options.message) {
+        document.getElementById('deleteConfirmMessage').textContent = options.message;
+    } else {
+        document.getElementById('deleteConfirmMessage').textContent = 
+            'Bu kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.';
+    }
+    
+    // Update item name
+    const itemInfo = document.getElementById('deleteItemInfo');
+    const itemName = document.getElementById('deleteItemName');
+    if (options.itemName) {
+        itemName.textContent = options.itemName;
+        itemInfo.style.display = 'block';
+    } else {
+        itemInfo.style.display = 'none';
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+function executeDelete() {
+    const btn = document.getElementById('confirmDeleteBtn');
+    const originalText = btn.innerHTML;
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Siliniyor...';
+    
+    fetch(deleteConfig.url, {
+        method: deleteConfig.method,
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+            
+            // Show success toast
+            showToast('Başarılı', 'Kayıt başarıyla silindi.', 'success');
+            
+            // Execute callback or redirect
+            if (deleteConfig.onSuccess) {
+                deleteConfig.onSuccess();
+            } else if (deleteConfig.redirectUrl) {
+                window.location.href = deleteConfig.redirectUrl;
+            } else {
+                window.location.reload();
+            }
+        } else {
+            throw new Error('Delete failed');
+        }
+    })
+    .catch(error => {
+        console.error('Delete error:', error);
+        showToast('Hata', 'Silme işlemi başarısız oldu.', 'error');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function showToast(title, message, type = 'info') {
+    // Simple toast implementation
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+        <div>
+            <strong>${title}</strong>
+            <p>${message}</p>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>

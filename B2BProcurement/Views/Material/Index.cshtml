@@ -1,0 +1,360 @@
+@model List<B2BProcurement.Controllers.MaterialListViewModel>
+@{
+    ViewData["Title"] = "Malzeme Listesi";
+    ViewData["PageTitle"] = "Malzeme Yönetimi";
+    ViewData["Breadcrumb"] = "Malzemeler";
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<style>
+    .material-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .filter-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-group label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-600);
+        margin-bottom: 6px;
+        display: block;
+    }
+    
+    .table-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .btn-group-actions .btn {
+        padding: 6px 12px;
+    }
+    
+    .table-body {
+        padding: 0;
+    }
+    
+    .badge-status {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .badge-inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .badge-public { background: rgba(123, 47, 247, 0.1); color: var(--primary); }
+    .badge-private { background: rgba(107, 114, 128, 0.1); color: var(--gray-600); }
+    
+    .action-btns {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .action-btns .btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 16px;
+    }
+    
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 16px;
+        padding: 0 24px 20px;
+    }
+    
+    table.dataTable tbody td {
+        vertical-align: middle;
+    }
+    
+    .material-name {
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .material-code {
+        font-size: 12px;
+        color: var(--gray-500);
+    }
+    
+    .doc-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+    
+    .doc-count i {
+        color: var(--primary);
+    }
+</style>
+}
+
+<div class="material-header">
+    <div>
+        <h4 class="mb-1">Malzeme Listesi</h4>
+        <p class="text-muted mb-0">Toplam @ViewBag.TotalItems malzeme</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("ExportToExcel")" class="btn btn-outline-success">
+            <i class="fas fa-file-excel me-2"></i>Excel
+        </a>
+        <a href="@Url.Action("Create")" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Yeni Malzeme
+        </a>
+    </div>
+</div>
+
+<!-- Filtreler -->
+<div class="filter-card">
+    <form method="get" id="filterForm">
+        <div class="filter-row">
+            <div class="filter-group" style="flex: 2;">
+                <label for="search">Arama</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="@ViewBag.Search" placeholder="Kod, ad veya açıklama ara...">
+            </div>
+            <div class="filter-group">
+                <label for="sectorId">Sektör</label>
+                <select class="form-select" id="sectorId" name="sectorId">
+                    <option value="">Tümü</option>
+                    @foreach (var sector in (List<SelectListItem>)ViewBag.Sectors)
+                    {
+                        <option value="@sector.Value" selected="@(ViewBag.SectorId?.ToString() == sector.Value)">
+                            @sector.Text
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="isActive">Durum</label>
+                <select class="form-select" id="isActive" name="isActive">
+                    <option value="">Tümü</option>
+                    <option value="true" selected="@(ViewBag.IsActive == true)">Aktif</option>
+                    <option value="false" selected="@(ViewBag.IsActive == false)">Pasif</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 0;">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i>Filtrele
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Tablo -->
+<div class="table-card">
+    <div class="table-body">
+        <table id="materialsTable" class="table table-hover mb-0" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Kod / Ad</th>
+                    <th>Sektör</th>
+                    <th>Birim</th>
+                    <th>Durum</th>
+                    <th>Görünürlük</th>
+                    <th>Doküman</th>
+                    <th>Tarih</th>
+                    <th style="width: 120px;">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="material-name">@item.Name</div>
+                            <div class="material-code">@item.Code</div>
+                        </td>
+                        <td>@item.SectorName</td>
+                        <td>@item.Unit</td>
+                        <td>
+                            <span class="badge-status @(item.IsActive ? "badge-active" : "badge-inactive")">
+                                @(item.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-status @(item.IsPublic ? "badge-public" : "badge-private")">
+                                @(item.IsPublic ? "Herkese Açık" : "Gizli")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="doc-count">
+                                <i class="fas fa-paperclip"></i>@item.DocumentCount
+                            </span>
+                        </td>
+                        <td>@item.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="@Url.Action("Details", new { id = item.Id })" 
+                                   class="btn btn-light" title="Görüntüle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="@Url.Action("Edit", new { id = item.Id })" 
+                                   class="btn btn-light" title="Düzenle">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-light text-danger" 
+                                        onclick="deleteMaterial(@item.Id, '@item.Name')" title="Sil">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Sayfalama -->
+@if (ViewBag.TotalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, search = ViewBag.Search, sectorId = ViewBag.SectorId, isActive = ViewBag.IsActive })">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = i, search = ViewBag.Search, sectorId = ViewBag.SectorId, isActive = ViewBag.IsActive })">@i</a>
+                </li>
+            }
+            <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, search = ViewBag.Search, sectorId = ViewBag.SectorId, isActive = ViewBag.IsActive })">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Malzeme Sil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 48px;"></i>
+                </div>
+                <p class="mb-1">Bu malzemeyi silmek istediğinizden emin misiniz?</p>
+                <p class="text-muted mb-0" id="deleteMaterialName"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Sil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    let deleteId = 0;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    
+    function deleteMaterial(id, name) {
+        deleteId = id;
+        document.getElementById('deleteMaterialName').textContent = name;
+        deleteModal.show();
+    }
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value 
+            || '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1];
+        
+        fetch('@Url.Action("Delete")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: 'id=' + deleteId + '&__RequestVerificationToken=' + token
+        })
+        .then(response => response.json())
+        .then(data => {
+            deleteModal.hide();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            deleteModal.hide();
+            alert('Bir hata oluştu.');
+        });
+    });
+</script>
+}

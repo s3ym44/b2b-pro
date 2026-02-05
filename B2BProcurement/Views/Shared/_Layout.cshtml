@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - B2B Procurement</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="wrapper">
+        <!-- ========== SIDEBAR ========== -->
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <i class="fas fa-cube brand-icon"></i>
+                    <span class="brand-text">B2B<span class="text-gradient">Procurement</span></span>
+                </a>
+                <button class="sidebar-toggle d-lg-none" id="sidebarToggleClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-body">
+                <ul class="sidebar-nav">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" href="/">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Malzemeler -->
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link" href="#materialsSubmenu" data-bs-toggle="collapse" aria-expanded="false">
+                            <i class="fas fa-boxes-stacked"></i>
+                            <span>Malzemeler</span>
+                            <i class="fas fa-chevron-right submenu-arrow"></i>
+                        </a>
+                        <ul class="submenu collapse" id="materialsSubmenu">
+                            <li><a href="/Material">Malzeme Listesi</a></li>
+                            <li><a href="/Material/Create">Yeni Malzeme</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Tedarikçiler -->
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link" href="#suppliersSubmenu" data-bs-toggle="collapse" aria-expanded="false">
+                            <i class="fas fa-truck"></i>
+                            <span>Tedarikçiler</span>
+                            <i class="fas fa-chevron-right submenu-arrow"></i>
+                        </a>
+                        <ul class="submenu collapse" id="suppliersSubmenu">
+                            <li><a href="/Supplier">Tedarikçi Listesi</a></li>
+                            <li><a href="/Supplier/Create">Yeni Tedarikçi</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-divider"></li>
+                    
+                    <!-- Tekliflerim -->
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link" href="#rfqSubmenu" data-bs-toggle="collapse" aria-expanded="false">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Tekliflerim</span>
+                            <i class="fas fa-chevron-right submenu-arrow"></i>
+                        </a>
+                        <ul class="submenu collapse" id="rfqSubmenu">
+                            <li><a href="/Rfq">Oluşturduklarım</a></li>
+                            <li><a href="/Rfq/Create">Yeni RFQ Oluştur</a></li>
+                            <li><a href="/Quotation">Gönderdiğim Teklifler</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Gelen Teklifler -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Rfq/Incoming">
+                            <i class="fas fa-inbox"></i>
+                            <span>Gelen Teklifler</span>
+                            <span class="badge bg-gradient-primary ms-auto">Yeni</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Teklif Karşılaştırma -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Rfq" title="RFQ listesinden karşılaştırma yapabilirsiniz">
+                            <i class="fas fa-scale-balanced"></i>
+                            <span>Teklif Karşılaştırma</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-divider"></li>
+                    
+                    <!-- Raporlar -->
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link" href="#reportsSubmenu" data-bs-toggle="collapse" aria-expanded="false">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Raporlar</span>
+                            <i class="fas fa-chevron-right submenu-arrow"></i>
+                        </a>
+                        <ul class="submenu collapse" id="reportsSubmenu">
+                            <li><a href="/Report/RfqReport">RFQ Raporu</a></li>
+                            <li><a href="/Report/QuotationReport">Teklif Raporu</a></li>
+                            <li><a href="/Report/SupplierPerformance">Tedarikçi Performansı</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Ayarlar (Yakında) -->
+                    <li class="nav-item has-submenu">
+                        <a class="nav-link" href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false">
+                            <i class="fas fa-gear"></i>
+                            <span>Ayarlar</span>
+                            <span class="badge bg-secondary ms-auto" style="font-size: 9px;">Yakında</span>
+                        </a>
+                        <ul class="submenu collapse" id="settingsSubmenu">
+                            <li><a href="#" class="text-muted">Şirket Bilgileri</a></li>
+                            <li><a href="#" class="text-muted">Kullanıcı Yönetimi</a></li>
+                            <li><a href="#" class="text-muted">Paket Bilgisi</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="package-info glass-card">
+                    <div class="package-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="package-details">
+                        <span class="package-name">Premium Paket</span>
+                        <span class="package-usage">85% kullanıldı</span>
+                    </div>
+                    <div class="package-progress">
+                        <div class="progress-bar" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- ========== MAIN CONTENT ========== -->
+        <div id="content" class="content">
+            <!-- Top Navbar -->
+            <nav class="topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="search-box d-none d-md-flex">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Ara..." class="form-control">
+                    </div>
+                </div>
+                
+                <div class="topbar-right">
+                    <!-- Language Selector -->
+                    <div class="dropdown topbar-item">
+                        <button class="topbar-btn" data-bs-toggle="dropdown">
+                            <img src="https://flagcdn.com/w20/tr.png" alt="TR" class="flag-icon">
+                            <span class="d-none d-md-inline">TR</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><img src="https://flagcdn.com/w20/tr.png" class="flag-icon me-2"> Türkçe</a></li>
+                            <li><a class="dropdown-item" href="#"><img src="https://flagcdn.com/w20/gb.png" class="flag-icon me-2"> English</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="dropdown topbar-item">
+                        <button class="topbar-btn" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown">
+                            <div class="notification-header">
+                                <h6>Bildirimler</h6>
+                                <a href="#">Tümünü Okundu İşaretle</a>
+                            </div>
+                            <div class="notification-body">
+                                <a href="#" class="notification-item unread">
+                                    <div class="notification-icon bg-gradient-primary">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <p>Yeni teklif talebi alındı</p>
+                                        <span>2 dakika önce</span>
+                                    </div>
+                                </a>
+                                <a href="#" class="notification-item unread">
+                                    <div class="notification-icon bg-gradient-success">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <p>Teklifiniz onaylandı</p>
+                                        <span>1 saat önce</span>
+                                    </div>
+                                </a>
+                                <a href="#" class="notification-item">
+                                    <div class="notification-icon bg-gradient-warning">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <p>RFQ süresi dolmak üzere</p>
+                                        <span>3 saat önce</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="notification-footer">
+                                <a href="/Notifications">Tüm Bildirimleri Gör</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    @{
+                        var userName = User.Identity?.Name ?? "Kullanıcı";
+                        var userInitials = string.Join("", userName.Split(' ').Take(2).Select(n => n.Length > 0 ? n[0].ToString().ToUpper() : ""));
+                        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Kullanıcı";
+                        var companyName = User.FindFirst("CompanyName")?.Value ?? "";
+                    }
+                    <div class="dropdown topbar-item user-menu">
+                        <button class="topbar-btn user-btn" data-bs-toggle="dropdown">
+                            <div class="user-avatar">
+                                <span>@userInitials</span>
+                            </div>
+                            <div class="user-info d-none d-md-block">
+                                <span class="user-name">@userName</span>
+                                <span class="user-role">@(userRole == "CompanyAdmin" ? "Şirket Yöneticisi" : userRole)</span>
+                            </div>
+                            <i class="fas fa-chevron-down d-none d-md-inline"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/Account/Profile"><i class="fas fa-user me-2"></i> Profilim</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-building me-2"></i> @companyName</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/Account/Logout"><i class="fas fa-sign-out-alt me-2"></i> Çıkış Yap</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Page Content -->
+            <main class="main-content">
+                @RenderBody()
+            </main>
+            
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="footer-left">
+                    <span>&copy; 2026 B2B Procurement. Tüm hakları saklıdır.</span>
+                </div>
+                <div class="footer-right">
+                    <a href="/Privacy">Gizlilik Politikası</a>
+                    <a href="/Terms">Kullanım Şartları</a>
+                    <a href="/Support">Destek</a>
+                </div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,457 @@
+@model B2BProcurement.Controllers.MaterialDetailsViewModel
+@{
+    ViewData["Title"] = "Malzeme Detayı";
+    ViewData["PageTitle"] = Model.Name;
+    ViewData["Breadcrumb"] = "Malzemeler";
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/css/glightbox.min.css">
+<style>
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    
+    .detail-title h4 {
+        margin: 0 0 8px;
+        font-weight: 700;
+    }
+    
+    .detail-code {
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+    
+    .detail-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .info-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .info-card .card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        background: transparent;
+    }
+    
+    .info-card .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    
+    .info-card .card-body {
+        padding: 24px;
+    }
+    
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        width: 140px;
+        flex-shrink: 0;
+        font-weight: 500;
+        color: var(--gray-500);
+        font-size: 14px;
+    }
+    
+    .info-value {
+        flex: 1;
+        color: var(--gray-800);
+        font-size: 14px;
+    }
+    
+    .badge-lg {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+    
+    .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .badge-inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .badge-public { background: rgba(123, 47, 247, 0.1); color: var(--primary); }
+    .badge-private { background: rgba(107, 114, 128, 0.1); color: var(--gray-600); }
+    
+    /* Gallery */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+    }
+    
+    .gallery-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .gallery-item:hover img {
+        transform: scale(1.05);
+    }
+    
+    .gallery-item .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .gallery-item:hover .overlay {
+        opacity: 1;
+    }
+    
+    .gallery-item .overlay i {
+        color: #fff;
+        font-size: 24px;
+    }
+    
+    /* Documents */
+    .doc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .doc-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .doc-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .doc-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--gray-100);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: var(--primary);
+    }
+    
+    .doc-info {
+        flex: 1;
+    }
+    
+    .doc-name {
+        font-weight: 500;
+        color: var(--gray-800);
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+    
+    .doc-meta {
+        font-size: 12px;
+        color: var(--gray-500);
+    }
+    
+    /* RFQ Table */
+    .rfq-table {
+        width: 100%;
+    }
+    
+    .rfq-table th {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        padding: 12px 16px;
+        border-bottom: 2px solid var(--gray-100);
+    }
+    
+    .rfq-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 14px;
+    }
+    
+    .rfq-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray-500);
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+        color: var(--gray-300);
+        margin-bottom: 16px;
+    }
+</style>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="detail-header">
+    <div class="detail-title">
+        <h4>@Model.Name</h4>
+        <span class="detail-code">
+            <i class="fas fa-barcode me-1"></i>@Model.Code
+        </span>
+    </div>
+    <div class="detail-actions">
+        <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>Düzenle
+        </a>
+        <a href="@Url.Action("Index")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Listeye Dön
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sol Kolon - Bilgiler -->
+    <div class="col-lg-8">
+        <!-- Temel Bilgiler -->
+        <div class="info-card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2 text-primary"></i>Temel Bilgiler</h5>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <div class="info-label">Malzeme Kodu</div>
+                    <div class="info-value"><strong>@Model.Code</strong></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Malzeme Adı</div>
+                    <div class="info-value">@Model.Name</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Açıklama</div>
+                    <div class="info-value">@(Model.Description ?? "-")</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Sektör</div>
+                    <div class="info-value">@Model.SectorName</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Birim</div>
+                    <div class="info-value">@Model.Unit</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Durum</div>
+                    <div class="info-value">
+                        <span class="badge-lg @(Model.IsActive ? "badge-active" : "badge-inactive")">
+                            @(Model.IsActive ? "Aktif" : "Pasif")
+                        </span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Görünürlük</div>
+                    <div class="info-value">
+                        <span class="badge-lg @(Model.IsPublic ? "badge-public" : "badge-private")">
+                            @(Model.IsPublic ? "Herkese Açık" : "Gizli")
+                        </span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Oluşturulma</div>
+                    <div class="info-value">@Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")</div>
+                </div>
+                @if (Model.UpdatedAt.HasValue)
+                {
+                    <div class="info-row">
+                        <div class="info-label">Son Güncelleme</div>
+                        <div class="info-value">@Model.UpdatedAt.Value.ToString("dd MMMM yyyy HH:mm")</div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- İlgili RFQ'lar -->
+        <div class="info-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-file-alt me-2 text-info"></i>İlgili Teklif Talepleri</h5>
+                <span class="badge bg-info">@Model.RelatedRfqs.Count</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RelatedRfqs.Any())
+                {
+                    <table class="rfq-table">
+                        <thead>
+                            <tr>
+                                <th>RFQ No</th>
+                                <th>Başlık</th>
+                                <th>Miktar</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rfq in Model.RelatedRfqs)
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="@Url.Action("Details", "Rfq", new { id = rfq.RfqId })" 
+                                           class="text-primary fw-semibold text-decoration-none">
+                                            #@rfq.RfqNumber
+                                        </a>
+                                    </td>
+                                    <td>@rfq.RfqTitle</td>
+                                    <td>@rfq.Quantity @Model.Unit</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@rfq.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <p class="mb-0">Bu malzeme henüz hiçbir RFQ'da kullanılmamış.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sağ Kolon - Görseller & Dokümanlar -->
+    <div class="col-lg-4">
+        @{
+            var images = Model.Documents.Where(d => d.IsImage).ToList();
+            var files = Model.Documents.Where(d => !d.IsImage).ToList();
+        }
+        
+        <!-- Görseller -->
+        <div class="info-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-images me-2 text-success"></i>Görseller</h5>
+                <span class="badge bg-success">@images.Count</span>
+            </div>
+            <div class="card-body">
+                @if (images.Any())
+                {
+                    <div class="gallery-grid">
+                        @foreach (var img in images)
+                        {
+                            <a href="@img.FilePath" class="gallery-item glightbox" data-gallery="gallery">
+                                <img src="@img.FilePath" alt="@img.FileName" />
+                                <div class="overlay">
+                                    <i class="fas fa-search-plus"></i>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state py-4">
+                        <i class="fas fa-image" style="font-size: 32px;"></i>
+                        <p class="mb-0 mt-2">Görsel yok</p>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- Dokümanlar -->
+        <div class="info-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-file-alt me-2 text-warning"></i>Dokümanlar</h5>
+                <span class="badge bg-warning text-dark">@files.Count</span>
+            </div>
+            <div class="card-body">
+                @if (files.Any())
+                {
+                    <ul class="doc-list">
+                        @foreach (var doc in files)
+                        {
+                            <li>
+                                <div class="doc-icon">
+                                    <i class="fas @GetFileIcon(doc.FileType)"></i>
+                                </div>
+                                <div class="doc-info">
+                                    <div class="doc-name">@doc.FileName</div>
+                                    <div class="doc-meta">
+                                        @doc.FormattedSize · @doc.UploadedAt.ToString("dd.MM.yyyy")
+                                    </div>
+                                </div>
+                                <a href="@doc.FilePath" target="_blank" class="btn btn-sm btn-light">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="empty-state py-4">
+                        <i class="fas fa-folder-open" style="font-size: 32px;"></i>
+                        <p class="mb-0 mt-2">Doküman yok</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/glightbox@3.2.0/dist/js/glightbox.min.js"></script>
+<script>
+    const lightbox = GLightbox({
+        touchNavigation: true,
+        loop: true,
+        autoplayVideos: true
+    });
+</script>
+}
+
+@functions {
+    string GetFileIcon(string fileType)
+    {
+        if (fileType.Contains("pdf")) return "fa-file-pdf";
+        if (fileType.Contains("word") || fileType.Contains("doc")) return "fa-file-word";
+        if (fileType.Contains("excel") || fileType.Contains("sheet") || fileType.Contains("xls")) return "fa-file-excel";
+        if (fileType.Contains("zip") || fileType.Contains("rar")) return "fa-file-archive";
+        return "fa-file";
+    }
+}

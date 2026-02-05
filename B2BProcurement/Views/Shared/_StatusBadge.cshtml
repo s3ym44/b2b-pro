@@ -1,0 +1,147 @@
+@* Status Badge Partial View *@
+@* Usage: <partial name="_StatusBadge" model="@Model.Status" /> *@
+@* Or with ViewData: <partial name="_StatusBadge" model="@new { Status = Model.Status, Type = "rfq" }" /> *@
+
+@{
+    string statusValue = "";
+    string statusType = ViewData["Type"]?.ToString() ?? "rfq";
+    
+    if (Model is Enum enumValue)
+    {
+        statusValue = enumValue.ToString();
+    }
+    else if (Model is string strValue)
+    {
+        statusValue = strValue;
+    }
+    else if (Model != null)
+    {
+        var prop = Model.GetType().GetProperty("Status");
+        if (prop != null)
+        {
+            statusValue = prop.GetValue(Model)?.ToString() ?? "";
+        }
+        
+        var typeProp = Model.GetType().GetProperty("Type");
+        if (typeProp != null)
+        {
+            statusType = typeProp.GetValue(Model)?.ToString() ?? "rfq";
+        }
+    }
+    
+    // Status configurations
+    var rfqStatuses = new Dictionary<string, (string Label, string Class, string Icon)>
+    {
+        { "Draft", ("Taslak", "draft", "fa-file") },
+        { "Published", ("Yayında", "published", "fa-globe") },
+        { "UnderReview", ("Değerlendirme", "pending", "fa-hourglass-half") },
+        { "Closed", ("Kapatıldı", "closed", "fa-lock") },
+        { "Completed", ("Tamamlandı", "approved", "fa-check-circle") },
+        { "Cancelled", ("İptal", "rejected", "fa-times-circle") }
+    };
+    
+    var quotationStatuses = new Dictionary<string, (string Label, string Class, string Icon)>
+    {
+        { "Draft", ("Taslak", "draft", "fa-file") },
+        { "Submitted", ("Gönderildi", "published", "fa-paper-plane") },
+        { "Approved", ("Onaylandı", "approved", "fa-check") },
+        { "Rejected", ("Reddedildi", "rejected", "fa-times") },
+        { "Withdrawn", ("Geri Çekildi", "withdrawn", "fa-undo") },
+        { "Completed", ("Tamamlandı", "approved", "fa-check-double") },
+        { "PartiallyApproved", ("Kısmi Onay", "partial", "fa-check-square") }
+    };
+    
+    var approvalStatuses = new Dictionary<string, (string Label, string Class, string Icon)>
+    {
+        { "Pending", ("Beklemede", "pending", "fa-clock") },
+        { "Approved", ("Onaylandı", "approved", "fa-check") },
+        { "Rejected", ("Reddedildi", "rejected", "fa-times") }
+    };
+    
+    var statuses = statusType.ToLower() switch
+    {
+        "quotation" => quotationStatuses,
+        "approval" => approvalStatuses,
+        _ => rfqStatuses
+    };
+    
+    var (label, cssClass, icon) = statuses.ContainsKey(statusValue) 
+        ? statuses[statusValue] 
+        : (statusValue, "default", "fa-circle");
+}
+
+<span class="status-badge @cssClass">
+    <i class="fas @icon"></i>
+    @label
+</span>
+
+<style>
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    
+    .status-badge i {
+        font-size: 10px;
+    }
+    
+    /* Draft */
+    .status-badge.draft {
+        background: var(--gray-100);
+        color: var(--gray-600);
+    }
+    
+    /* Published / Active */
+    .status-badge.published {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    /* Pending / Under Review */
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    /* Approved / Success */
+    .status-badge.approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    /* Rejected / Error */
+    .status-badge.rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    /* Closed */
+    .status-badge.closed {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    /* Withdrawn */
+    .status-badge.withdrawn {
+        background: rgba(156, 163, 175, 0.1);
+        color: #9ca3af;
+    }
+    
+    /* Partial */
+    .status-badge.partial {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+    }
+    
+    /* Default */
+    .status-badge.default {
+        background: var(--gray-100);
+        color: var(--gray-600);
+    }
+</style>

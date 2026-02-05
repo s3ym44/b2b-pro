@@ -1,0 +1,315 @@
+@model B2BProcurement.Controllers.RfqReportViewModel
+@{
+    ViewData["Title"] = "RFQ Raporu";
+    ViewData["PageTitle"] = "Teklif Talepleri Raporu";
+    ViewData["Breadcrumb"] = "Raporlar";
+}
+
+@section Styles {
+<style>
+    /* Filter Card */
+    .filter-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-600);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+    }
+    
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid var(--primary);
+    }
+    
+    .stat-card.draft { border-color: #6B7280; }
+    .stat-card.published { border-color: #10B981; }
+    .stat-card.closed { border-color: #3B82F6; }
+    .stat-card.cancelled { border-color: #EF4444; }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    .stat-label {
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+    
+    .stat-change {
+        font-size: 12px;
+        margin-top: 8px;
+    }
+    
+    .stat-change.positive { color: #10B981; }
+    .stat-change.negative { color: #EF4444; }
+    
+    /* Chart Cards */
+    .chart-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .chart-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .chart-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chart-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .chart-body {
+        padding: 24px;
+    }
+    
+    /* Summary Cards */
+    .summary-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .summary-card {
+        background: linear-gradient(135deg, #1E293B, #334155);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        color: white;
+    }
+    
+    .summary-card h6 {
+        margin: 0 0 4px;
+        opacity: 0.7;
+        font-size: 13px;
+    }
+    
+    .summary-value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+</style>
+}
+
+<!-- Filter Card -->
+<div class="filter-card">
+    <form method="get" id="filterForm">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>Başlangıç Tarihi</label>
+                <input type="date" name="StartDate" value="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="filter-group">
+                <label>Bitiş Tarihi</label>
+                <input type="date" name="EndDate" value="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="filter-group">
+                <label>Durum</label>
+                <select name="Status">
+                    <option value="">Tümü</option>
+                    <option value="0">Taslak</option>
+                    <option value="1">Yayında</option>
+                    <option value="2">Kapalı</option>
+                    <option value="3">İptal</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Sektör</label>
+                <select name="SectorId">
+                    <option value="">Tümü</option>
+                    @foreach (var sector in Model.Sectors)
+                    {
+                        var isSelected = Model.Filter.SectorId?.ToString() == sector.Value;
+                        <option value="@sector.Value" selected="@isSelected">@sector.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 0;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-2"></i>Filtrele
+                </button>
+            </div>
+            <div class="filter-group" style="flex: 0;">
+                <a href="@Url.Action("ExportRfqReport", Model.Filter)" class="btn btn-outline-success">
+                    <i class="fas fa-file-excel me-2"></i>Excel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">@Model.TotalRfqs</div>
+        <div class="stat-label">Toplam RFQ</div>
+    </div>
+    <div class="stat-card draft">
+        <div class="stat-value">@Model.DraftCount</div>
+        <div class="stat-label">Taslak</div>
+    </div>
+    <div class="stat-card published">
+        <div class="stat-value">@Model.PublishedCount</div>
+        <div class="stat-label">Yayında</div>
+    </div>
+    <div class="stat-card closed">
+        <div class="stat-value">@Model.ClosedCount</div>
+        <div class="stat-label">Kapatılmış</div>
+    </div>
+</div>
+
+<!-- Summary Row -->
+<div class="summary-row">
+    <div class="summary-card">
+        <h6>ALINAN TEKLİFLER</h6>
+        <div class="summary-value">@Model.TotalQuotations</div>
+    </div>
+    <div class="summary-card">
+        <h6>ORTALAMA TEKLİF / RFQ</h6>
+        <div class="summary-value">@Model.AvgQuotationsPerRfq.ToString("N1")</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="chart-row">
+    <!-- Monthly Trend -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h5><i class="fas fa-chart-line me-2"></i>Aylık RFQ Trendi</h5>
+        </div>
+        <div class="chart-body">
+            <canvas id="monthlyChart" height="300"></canvas>
+        </div>
+    </div>
+    
+    <!-- Sector Distribution -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h5><i class="fas fa-chart-pie me-2"></i>Sektör Dağılımı</h5>
+        </div>
+        <div class="chart-body">
+            <canvas id="sectorChart" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyData.Select(m => m.Label))),
+            datasets: [{
+                label: 'RFQ Sayısı',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyData.Select(m => m.Count))),
+                backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                borderColor: 'rgba(139, 92, 246, 1)',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+    
+    // Sector Chart
+    const sectorCtx = document.getElementById('sectorChart').getContext('2d');
+    new Chart(sectorCtx, {
+        type: 'doughnut',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SectorDistribution.Select(s => s.Label))),
+            datasets: [{
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SectorDistribution.Select(s => s.Value))),
+                backgroundColor: [
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(239, 68, 68, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+</script>
+}

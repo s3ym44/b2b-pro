@@ -1,0 +1,414 @@
+@model IEnumerable<B2BProcurement.Controllers.RfqListViewModel>
+@{
+    ViewData["Title"] = "Teklif Taleplerim";
+    ViewData["PageTitle"] = "Teklif Taleplerim (RFQ)";
+    ViewData["Breadcrumb"] = "RFQ";
+    
+    var rfqList = Model?.ToList() ?? new List<B2BProcurement.Controllers.RfqListViewModel>();
+    var totalCount = rfqList.Count;
+    var draftCount = rfqList.Count(r => r.Status == B2BProcurement.Core.Enums.RfqStatus.Draft);
+    var publishedCount = rfqList.Count(r => r.Status == B2BProcurement.Core.Enums.RfqStatus.Published);
+    var closedCount = rfqList.Count(r => r.Status == B2BProcurement.Core.Enums.RfqStatus.Closed);
+}
+
+@section Styles {
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+<style>
+    /* Status Tabs */
+    .status-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        background: var(--white);
+        padding: 8px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .status-tab {
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        color: var(--gray-600);
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .status-tab:hover {
+        background: var(--gray-100);
+        color: var(--gray-800);
+    }
+    
+    .status-tab.active {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .status-tab .count {
+        background: rgba(0,0,0,0.1);
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    
+    .status-tab.active .count {
+        background: rgba(255,255,255,0.2);
+    }
+    
+    /* Table Card */
+    .table-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .table-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table-card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .table-card-body {
+        padding: 0;
+    }
+    
+    /* DataTable Custom */
+    .dataTables_wrapper {
+        padding: 20px;
+    }
+    
+    .dataTables_filter input {
+        border-radius: var(--radius-md) !important;
+        border-color: var(--gray-200) !important;
+        padding: 8px 16px !important;
+    }
+    
+    .dataTables_length select {
+        border-radius: var(--radius-md) !important;
+        border-color: var(--gray-200) !important;
+    }
+    
+    table.dataTable {
+        border-collapse: collapse !important;
+    }
+    
+    table.dataTable thead th {
+        background: var(--gray-50);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        padding: 14px 16px !important;
+        border-bottom: 1px solid var(--gray-200) !important;
+    }
+    
+    table.dataTable tbody td {
+        padding: 16px !important;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--gray-100) !important;
+    }
+    
+    table.dataTable tbody tr:hover {
+        background: var(--gray-50) !important;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .status-draft { background: #FEF3C7; color: #92400E; }
+    .status-published { background: #DCFCE7; color: #166534; }
+    .status-closed { background: #E5E7EB; color: #374151; }
+    .status-cancelled { background: #FEE2E2; color: #991B1B; }
+    
+    /* RFQ Info */
+    .rfq-title {
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 4px;
+    }
+    
+    .rfq-meta {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+    
+    /* Stats Pills */
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: var(--gray-100);
+        border-radius: 20px;
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+    
+    .stat-pill.has-responses {
+        background: #DBEAFE;
+        color: #1D4ED8;
+    }
+    
+    /* Deadline */
+    .deadline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+    }
+    
+    .deadline.warning { color: var(--warning); }
+    .deadline.danger { color: var(--danger); }
+    .deadline.normal { color: var(--gray-600); }
+    
+    /* Action Buttons */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-500);
+        border: 1px solid var(--gray-200);
+        background: var(--white);
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        background: var(--gray-50);
+        color: var(--gray-700);
+    }
+    
+    .action-btn.primary:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--gray-100);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: var(--gray-400);
+        margin-bottom: 20px;
+    }
+</style>
+}
+
+<!-- Header Actions -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted mb-0">Oluşturduğunuz teklif taleplerini yönetin</p>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Yeni RFQ Oluştur
+    </a>
+</div>
+
+<!-- Status Tabs -->
+<div class="status-tabs">
+    <button class="status-tab active" data-status="all">
+        <i class="fas fa-list"></i> Tümü
+        <span class="count">@totalCount</span>
+    </button>
+    <button class="status-tab" data-status="Draft">
+        <i class="fas fa-edit"></i> Taslak
+        <span class="count">@draftCount</span>
+    </button>
+    <button class="status-tab" data-status="Published">
+        <i class="fas fa-broadcast-tower"></i> Yayında
+        <span class="count">@publishedCount</span>
+    </button>
+    <button class="status-tab" data-status="Closed">
+        <i class="fas fa-check-circle"></i> Kapalı
+        <span class="count">@closedCount</span>
+    </button>
+</div>
+
+<!-- Table Card -->
+<div class="table-card">
+    <div class="table-card-header">
+        <h5><i class="fas fa-file-invoice me-2"></i>RFQ Listesi</h5>
+    </div>
+    <div class="table-card-body">
+        @if (rfqList.Any())
+        {
+            <table id="rfqTable" class="table table-hover mb-0" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>RFQ</th>
+                        <th>Durum</th>
+                        <th>Kalem</th>
+                        <th>Cevap</th>
+                        <th>Son Tarih</th>
+                        <th style="width: 120px;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rfq in rfqList)
+                    {
+                        var statusClass = rfq.Status switch
+                        {
+                            B2BProcurement.Core.Enums.RfqStatus.Draft => "status-draft",
+                            B2BProcurement.Core.Enums.RfqStatus.Published => "status-published",
+                            B2BProcurement.Core.Enums.RfqStatus.Closed => "status-closed",
+                            B2BProcurement.Core.Enums.RfqStatus.Cancelled => "status-cancelled",
+                            _ => "status-draft"
+                        };
+                        var daysLeft = (rfq.EndDate - DateTime.Now).Days;
+                        var deadlineClass = daysLeft <= 0 ? "danger" : (daysLeft <= 3 ? "warning" : "normal");
+                        
+                        <tr data-status="@rfq.Status">
+                            <td>
+                                <div class="rfq-title">@rfq.Title</div>
+                                <div class="rfq-meta">
+                                    <i class="fas fa-industry me-1"></i>@rfq.SectorName
+                                    <span class="mx-2">|</span>
+                                    <i class="fas fa-calendar me-1"></i>@rfq.CreatedAt.ToString("dd.MM.yyyy")
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge @statusClass">@rfq.StatusText</span>
+                            </td>
+                            <td>
+                                <span class="stat-pill">
+                                    <i class="fas fa-cube"></i> @rfq.ItemCount
+                                </span>
+                            </td>
+                            <td>
+                                <span class="stat-pill @(rfq.QuotationCount > 0 ? "has-responses" : "")">
+                                    <i class="fas fa-reply"></i> @rfq.QuotationCount
+                                </span>
+                            </td>
+                            <td>
+                                @if (rfq.Status == B2BProcurement.Core.Enums.RfqStatus.Published)
+                                {
+                                    <div class="deadline @deadlineClass">
+                                        <i class="fas fa-clock"></i>
+                                        @if (daysLeft <= 0)
+                                        {
+                                            <span>Süresi doldu</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@daysLeft gün kaldı</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">@rfq.EndDate.ToString("dd.MM.yyyy")</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="@Url.Action("Details", new { id = rfq.Id })" class="action-btn primary" title="Detay">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (rfq.Status == B2BProcurement.Core.Enums.RfqStatus.Draft)
+                                    {
+                                        <a href="@Url.Action("Edit", new { id = rfq.Id })" class="action-btn" title="Düzenle">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    }
+                                    @if (rfq.QuotationCount > 0)
+                                    {
+                                        <a href="@Url.Action("Comparison", new { id = rfq.Id })" class="action-btn" title="Karşılaştır">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <h5>Henüz RFQ oluşturmadınız</h5>
+                <p class="text-muted">İlk teklif talebinizi oluşturarak tedarikçilerden fiyat almaya başlayın.</p>
+                <a href="@Url.Action("Create")" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>İlk RFQ'yu Oluştur
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        var table = $('#rfqTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/tr.json',
+            },
+            order: [[0, 'desc']],
+            pageLength: 10,
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+        });
+        
+        // Status Tab Filter
+        $('.status-tab').on('click', function() {
+            $('.status-tab').removeClass('active');
+            $(this).addClass('active');
+            
+            var status = $(this).data('status');
+            
+            if (status === 'all') {
+                table.column(1).search('').draw();
+            } else {
+                // Map status to Turkish text
+                var statusText = {
+                    'Draft': 'Taslak',
+                    'Published': 'Yayında',
+                    'Closed': 'Kapalı',
+                    'Cancelled': 'İptal'
+                };
+                table.column(1).search(statusText[status] || '').draw();
+            }
+        });
+    });
+</script>
+}

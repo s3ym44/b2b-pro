@@ -1,0 +1,521 @@
+@model B2BProcurement.Controllers.QuotationDetailsViewModel
+@{
+    ViewData["Title"] = "Teklif Detayı";
+    ViewData["PageTitle"] = Model.QuotationNumber;
+    ViewData["Breadcrumb"] = "Teklif";
+}
+
+@section Styles {
+<style>
+    /* Summary Card */
+    .summary-card {
+        background: linear-gradient(135deg, #1E293B, #334155);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        color: white;
+        margin-bottom: 24px;
+    }
+    
+    .summary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+    }
+    
+    .summary-title h3 {
+        margin: 0 0 8px;
+        font-weight: 700;
+    }
+    
+    .summary-subtitle {
+        opacity: 0.8;
+        font-size: 14px;
+    }
+    
+    .summary-amount {
+        text-align: right;
+    }
+    
+    .amount-value {
+        font-size: 32px;
+        font-weight: 700;
+    }
+    
+    .amount-label {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+    
+    .summary-item {
+        background: rgba(255,255,255,0.05);
+        padding: 16px;
+        border-radius: var(--radius-md);
+    }
+    
+    .summary-item-label {
+        font-size: 11px;
+        opacity: 0.6;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .summary-item-value {
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    /* Status Badge Large */
+    .status-badge-lg {
+        padding: 10px 20px;
+        border-radius: 24px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .status-draft { background: #6B7280; color: white; }
+    .status-submitted { background: #3B82F6; color: white; }
+    .status-approved { background: #10B981; color: white; }
+    .status-rejected { background: #EF4444; color: white; }
+    .status-partial { background: #F59E0B; color: white; }
+    
+    /* Section Card */
+    .section-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    
+    .section-header {
+        padding: 20px 24px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .section-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .section-body {
+        padding: 0;
+    }
+    
+    /* Items Table */
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .items-table th {
+        background: var(--gray-50);
+        padding: 14px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 2px solid var(--gray-200);
+    }
+    
+    .items-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: top;
+    }
+    
+    .items-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .item-info h6 {
+        margin: 0 0 4px;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .item-meta {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+    
+    /* Approval Status */
+    .approval-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .approval-pending { background: #FEF3C7; color: #92400E; }
+    .approval-approved { background: #DCFCE7; color: #166534; }
+    .approval-rejected { background: #FEE2E2; color: #991B1B; }
+    
+    /* Price Column */
+    .price-info {
+        text-align: right;
+    }
+    
+    .unit-price {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+    
+    .total-price {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    /* Competition Info */
+    .competition-card {
+        background: linear-gradient(135deg, #F8FAFC, #E2E8F0);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .competition-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .competition-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .competition-row:last-child {
+        border-bottom: none;
+    }
+    
+    .competition-label {
+        color: var(--gray-600);
+    }
+    
+    .competition-value {
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .competition-best {
+        color: #10B981;
+    }
+    
+    .competition-you {
+        color: var(--primary);
+    }
+    
+    /* Action Bar */
+    .action-bar {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+    }
+    
+    /* RFQ Link Card */
+    .rfq-link-card {
+        background: linear-gradient(135deg, var(--primary), #7C3AED);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .rfq-link-info h6 {
+        margin: 0 0 4px;
+        font-weight: 600;
+    }
+    
+    .rfq-link-info p {
+        margin: 0;
+        opacity: 0.8;
+        font-size: 14px;
+    }
+    
+    .rfq-link-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 10px 20px;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+    }
+    
+    .rfq-link-btn:hover {
+        background: rgba(255,255,255,0.3);
+        color: white;
+    }
+</style>
+}
+
+<!-- Back Button -->
+<div class="mb-4">
+    <a href="@Url.Action("Index")" class="btn btn-light">
+        <i class="fas fa-arrow-left me-2"></i>Tekliflerime Dön
+    </a>
+</div>
+
+<!-- Summary Card -->
+<div class="summary-card">
+    <div class="summary-header">
+        <div class="summary-title">
+            <h3><i class="fas fa-file-invoice-dollar me-2"></i>@Model.QuotationNumber</h3>
+            <div class="summary-subtitle">
+                RFQ: @Model.RfqNumber - @Model.RfqTitle
+            </div>
+            @{
+                var statusClass = Model.Status switch
+                {
+                    B2BProcurement.Core.Enums.QuotationStatus.Draft => "status-draft",
+                    B2BProcurement.Core.Enums.QuotationStatus.Submitted => "status-submitted",
+                    B2BProcurement.Core.Enums.QuotationStatus.Approved => "status-approved",
+                    B2BProcurement.Core.Enums.QuotationStatus.Rejected => "status-rejected",
+                    B2BProcurement.Core.Enums.QuotationStatus.PartiallyApproved => "status-partial",
+                    _ => "status-draft"
+                };
+            }
+            <div class="mt-3">
+                <span class="status-badge-lg @statusClass">
+                    <i class="fas fa-circle" style="font-size: 8px;"></i>
+                    @Model.StatusText
+                </span>
+            </div>
+        </div>
+        <div class="summary-amount">
+            <div class="amount-label">TOPLAM TUTAR</div>
+            <div class="amount-value">@Model.TotalAmount.ToString("N2") <small>TRY</small></div>
+        </div>
+    </div>
+    
+    <div class="summary-grid">
+        <div class="summary-item">
+            <div class="summary-item-label">Kalem Sayısı</div>
+            <div class="summary-item-value">@Model.Items.Count</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-item-label">Geçerlilik Tarihi</div>
+            <div class="summary-item-value">@(Model.ValidUntil?.ToString("dd.MM.yyyy") ?? "-")</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-item-label">Oluşturulma</div>
+            <div class="summary-item-value">@Model.CreatedAt.ToString("dd.MM.yyyy")</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-item-label">Tedarikçi</div>
+            <div class="summary-item-value">@Model.SupplierCompanyName</div>
+        </div>
+    </div>
+</div>
+
+<!-- RFQ Link -->
+<div class="rfq-link-card mb-4">
+    <div class="rfq-link-info">
+        <h6><i class="fas fa-file-alt me-2"></i>İlgili RFQ</h6>
+        <p>@Model.RfqNumber - @Model.RfqTitle</p>
+    </div>
+    <a href="@Url.Action("Details", "Rfq", new { id = Model.RfqId })" class="rfq-link-btn">
+        <i class="fas fa-external-link-alt me-2"></i>RFQ'yu Görüntüle
+    </a>
+</div>
+
+<!-- Items Section -->
+<div class="section-card">
+    <div class="section-header">
+        <h5>
+            <i class="fas fa-list-ul text-primary"></i>
+            Teklif Kalemleri
+        </h5>
+        <span class="badge bg-primary">@Model.Items.Count Kalem</span>
+    </div>
+    <div class="section-body">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Kalem</th>
+                    <th>Miktar</th>
+                    <th>Birim Fiyat</th>
+                    <th>Teslim Tarihi</th>
+                    <th>Onay Durumu</th>
+                    <th style="text-align: right;">Toplam</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    var approvalClass = item.ApprovalStatus switch
+                    {
+                        B2BProcurement.Core.Enums.ApprovalStatus.Pending => "approval-pending",
+                        B2BProcurement.Core.Enums.ApprovalStatus.Approved => "approval-approved",
+                        B2BProcurement.Core.Enums.ApprovalStatus.Rejected => "approval-rejected",
+                        _ => "approval-pending"
+                    };
+                    var approvalText = item.ApprovalStatus switch
+                    {
+                        B2BProcurement.Core.Enums.ApprovalStatus.Pending => "Beklemede",
+                        B2BProcurement.Core.Enums.ApprovalStatus.Approved => "Onaylandı",
+                        B2BProcurement.Core.Enums.ApprovalStatus.Rejected => "Reddedildi",
+                        _ => "Beklemede"
+                    };
+                    var approvalIcon = item.ApprovalStatus switch
+                    {
+                        B2BProcurement.Core.Enums.ApprovalStatus.Approved => "fa-check-circle",
+                        B2BProcurement.Core.Enums.ApprovalStatus.Rejected => "fa-times-circle",
+                        _ => "fa-clock"
+                    };
+                    
+                    <tr>
+                        <td>
+                            <div class="item-info">
+                                <h6>@item.RfqItemDescription</h6>
+                                <div class="item-meta">
+                                    <i class="fas fa-cube me-1"></i>Talep: @item.RequestedQuantity.ToString("N2") @item.Unit
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fw-medium">@item.OfferedQuantity.ToString("N2") @item.Unit</span>
+                        </td>
+                        <td>
+                            <span class="fw-medium">@item.UnitPrice.ToString("N2")</span>
+                            <span class="text-muted">TRY</span>
+                        </td>
+                        <td>
+                            @if (item.DeliveryDate.HasValue)
+                            {
+                                <span><i class="fas fa-truck me-1 text-muted"></i>@item.DeliveryDate.Value.ToString("dd.MM.yyyy")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="approval-badge @approvalClass">
+                                <i class="fas @approvalIcon"></i>
+                                @approvalText
+                            </span>
+                            @if (item.ApprovedQuantity.HasValue && item.ApprovalStatus == B2BProcurement.Core.Enums.ApprovalStatus.Approved)
+                            {
+                                <div class="mt-1">
+                                    <small class="text-success">Onaylanan: @item.ApprovedQuantity.Value.ToString("N2") @item.Unit</small>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <div class="price-info">
+                                <div class="total-price">@item.TotalPrice.ToString("N2")</div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Competition Info (Optional - shown if RFQ owner) -->
+@if (Model.IsRfqOwner)
+{
+    <div class="section-card">
+        <div class="section-header">
+            <h5>
+                <i class="fas fa-chart-bar text-primary"></i>
+                Rekabet Bilgisi
+            </h5>
+        </div>
+        <div class="section-body p-4">
+            <div class="competition-card">
+                <div class="competition-title">
+                    <i class="fas fa-trophy"></i>
+                    Fiyat Karşılaştırması
+                </div>
+                <div class="competition-row">
+                    <span class="competition-label">Bu Teklif</span>
+                    <span class="competition-value competition-you">@Model.TotalAmount.ToString("N2") TRY</span>
+                </div>
+                <div class="competition-row">
+                    <span class="competition-label">Detaylı Karşılaştırma</span>
+                    <a href="@Url.Action("Comparison", "Rfq", new { id = Model.RfqId })" class="btn btn-sm btn-primary">
+                        <i class="fas fa-chart-bar me-1"></i>Matrisi Görüntüle
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Action Bar -->
+<div class="action-bar">
+    <div>
+        @if (Model.IsOwner && Model.Status == B2BProcurement.Core.Enums.QuotationStatus.Draft)
+        {
+            <span class="text-muted">
+                <i class="fas fa-info-circle me-2"></i>Bu teklif henüz gönderilmedi.
+            </span>
+        }
+    </div>
+    <div class="action-buttons">
+        @if (Model.IsOwner)
+        {
+            @if (Model.Status == B2BProcurement.Core.Enums.QuotationStatus.Draft)
+            {
+                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit me-2"></i>Düzenle
+                </a>
+                <form asp-action="Submit" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-paper-plane me-2"></i>Gönder
+                    </button>
+                </form>
+            }
+        }
+        
+        @if (Model.IsRfqOwner && Model.Status == B2BProcurement.Core.Enums.QuotationStatus.Submitted)
+        {
+            <a href="@Url.Action("Comparison", "Rfq", new { id = Model.RfqId })" class="btn btn-primary">
+                <i class="fas fa-chart-bar me-2"></i>Karşılaştır
+            </a>
+        }
+    </div>
+</div>

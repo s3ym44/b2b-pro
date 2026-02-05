@@ -1,0 +1,344 @@
+@model List<B2BProcurement.Controllers.SupplierListViewModel>
+@{
+    ViewData["Title"] = "Tedarikçi Listesi";
+    ViewData["PageTitle"] = "Tedarikçi Yönetimi";
+    ViewData["Breadcrumb"] = "Tedarikçiler";
+}
+
+@section Styles {
+<style>
+    .supplier-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .filter-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 180px;
+    }
+    
+    .filter-group label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-600);
+        margin-bottom: 6px;
+        display: block;
+    }
+    
+    .table-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    
+    .table-body {
+        padding: 0;
+    }
+    
+    .badge-platform {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .badge-platform.member {
+        background: linear-gradient(135deg, rgba(123, 47, 247, 0.1), rgba(139, 92, 246, 0.1));
+        color: var(--primary);
+    }
+    
+    .badge-platform.external {
+        background: rgba(107, 114, 128, 0.1);
+        color: var(--gray-600);
+    }
+    
+    .supplier-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .supplier-name {
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    .supplier-company {
+        font-size: 12px;
+        color: var(--primary);
+        margin-top: 2px;
+    }
+    
+    .contact-info {
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+    
+    .contact-info i {
+        width: 16px;
+        margin-right: 4px;
+        color: var(--gray-400);
+    }
+    
+    .action-btns {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .action-btns .btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+    }
+    
+    table.dataTable tbody td {
+        vertical-align: middle;
+    }
+</style>
+}
+
+<div class="supplier-header">
+    <div>
+        <h4 class="mb-1">Tedarikçi Listesi</h4>
+        <p class="text-muted mb-0">Toplam @ViewBag.TotalItems tedarikçi</p>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Yeni Tedarikçi
+    </a>
+</div>
+
+<!-- Filtreler -->
+<div class="filter-card">
+    <form method="get" id="filterForm">
+        <div class="filter-row">
+            <div class="filter-group" style="flex: 2;">
+                <label for="search">Arama</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="@ViewBag.Search" placeholder="Ad, vergi no veya e-posta ara...">
+            </div>
+            <div class="filter-group">
+                <label for="sectorId">Sektör</label>
+                <select class="form-select" id="sectorId" name="sectorId">
+                    <option value="">Tümü</option>
+                    @foreach (var sector in (List<SelectListItem>)ViewBag.Sectors)
+                    {
+                        <option value="@sector.Value" selected="@(ViewBag.SectorId?.ToString() == sector.Value)">
+                            @sector.Text
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="isPlatformMember">Üyelik Durumu</label>
+                <select class="form-select" id="isPlatformMember" name="isPlatformMember">
+                    <option value="">Tümü</option>
+                    <option value="true" selected="@(ViewBag.IsPlatformMember == true)">Platform Üyesi</option>
+                    <option value="false" selected="@(ViewBag.IsPlatformMember == false)">Harici</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 0;">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i>Filtrele
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Tablo -->
+<div class="table-card">
+    <div class="table-body">
+        <table class="table table-hover mb-0" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tedarikçi</th>
+                    <th>Vergi No</th>
+                    <th>İletişim</th>
+                    <th>Sektör</th>
+                    <th>Platform</th>
+                    <th>Tarih</th>
+                    <th style="width: 100px;">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="supplier-info">
+                                <span class="supplier-name">@item.Name</span>
+                                @if (item.IsPlatformMember && !string.IsNullOrEmpty(item.SupplierCompanyName))
+                                {
+                                    <span class="supplier-company">
+                                        <i class="fas fa-link me-1"></i>@item.SupplierCompanyName
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                        <td>@(item.TaxNumber ?? "-")</td>
+                        <td>
+                            <div class="contact-info">
+                                @if (!string.IsNullOrEmpty(item.Email))
+                                {
+                                    <div><i class="fas fa-envelope"></i>@item.Email</div>
+                                }
+                                @if (!string.IsNullOrEmpty(item.Phone))
+                                {
+                                    <div><i class="fas fa-phone"></i>@item.Phone</div>
+                                }
+                            </div>
+                        </td>
+                        <td>@item.SectorName</td>
+                        <td>
+                            @if (item.IsPlatformMember)
+                            {
+                                <span class="badge-platform member">
+                                    <i class="fas fa-check-circle"></i>Üye
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-platform external">
+                                    <i class="fas fa-external-link-alt"></i>Harici
+                                </span>
+                            }
+                        </td>
+                        <td>@item.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="@Url.Action("Edit", new { id = item.Id })" 
+                                   class="btn btn-light" title="Düzenle">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-light text-danger" 
+                                        onclick="deleteSupplier(@item.Id, '@item.Name')" title="Sil">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Sayfalama -->
+@if (ViewBag.TotalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, search = ViewBag.Search, sectorId = ViewBag.SectorId, isPlatformMember = ViewBag.IsPlatformMember })">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = i, search = ViewBag.Search, sectorId = ViewBag.SectorId, isPlatformMember = ViewBag.IsPlatformMember })">@i</a>
+                </li>
+            }
+            <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, search = ViewBag.Search, sectorId = ViewBag.SectorId, isPlatformMember = ViewBag.IsPlatformMember })">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Tedarikçi Sil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 48px;"></i>
+                </div>
+                <p class="mb-1">Bu tedarikçiyi silmek istediğinizden emin misiniz?</p>
+                <p class="text-muted mb-0" id="deleteSupplierName"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Sil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let deleteId = 0;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    
+    function deleteSupplier(id, name) {
+        deleteId = id;
+        document.getElementById('deleteSupplierName').textContent = name;
+        deleteModal.show();
+    }
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
+        fetch('@Url.Action("Delete")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: 'id=' + deleteId + '&__RequestVerificationToken=' + token
+        })
+        .then(response => response.json())
+        .then(data => {
+            deleteModal.hide();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    });
+</script>
+}

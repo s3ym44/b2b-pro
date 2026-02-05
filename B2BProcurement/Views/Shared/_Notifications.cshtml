@@ -1,0 +1,173 @@
+@* Notifications Dropdown Partial *@
+@{
+    var notifications = ViewBag.Notifications as IEnumerable<dynamic> ?? new List<dynamic>();
+    var unreadCount = ViewBag.UnreadNotificationCount ?? 0;
+}
+
+<div class="dropdown topbar-item">
+    <button class="topbar-btn" data-bs-toggle="dropdown" aria-expanded="false" id="notificationDropdownBtn">
+        <i class="fas fa-bell"></i>
+        @if ((int)unreadCount > 0)
+        {
+            <span class="notification-badge" id="notificationBadge">@unreadCount</span>
+        }
+    </button>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown" id="notificationDropdown">
+        <div class="notification-header">
+            <h6>Bildirimler</h6>
+            <a href="#" id="markAllReadBtn" onclick="markAllNotificationsRead()">Tümünü Okundu İşaretle</a>
+        </div>
+        <div class="notification-body" id="notificationList">
+            <div class="text-center py-4 text-muted" id="notificationLoading">
+                <i class="fas fa-spinner fa-spin me-2"></i> Yükleniyor...
+            </div>
+            <div id="notificationItems" style="display: none;">
+                <!-- Notifications will be loaded here via AJAX -->
+            </div>
+            <div class="text-center py-4 text-muted" id="noNotifications" style="display: none;">
+                <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                <p class="mb-0">Bildirim bulunmuyor</p>
+            </div>
+        </div>
+        <div class="notification-footer">
+            <a href="/Notifications">Tüm Bildirimleri Gör</a>
+        </div>
+    </div>
+</div>
+
+<script>
+let notificationsLoaded = false;
+
+// Load notifications when dropdown is opened
+document.getElementById('notificationDropdownBtn')?.addEventListener('click', function() {
+    if (!notificationsLoaded) {
+        loadNotifications();
+    }
+});
+
+function loadNotifications() {
+    fetch('/api/notifications/unread')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('notificationItems');
+            const loading = document.getElementById('notificationLoading');
+            const noNotifications = document.getElementById('noNotifications');
+            
+            loading.style.display = 'none';
+            
+            if (data && data.length > 0) {
+                container.innerHTML = data.map(n => createNotificationItem(n)).join('');
+                container.style.display = 'block';
+            } else {
+                noNotifications.style.display = 'block';
+            }
+            
+            notificationsLoaded = true;
+        })
+        .catch(error => {
+            console.error('Notifications error:', error);
+            document.getElementById('notificationLoading').innerHTML = 
+                '<p class="text-danger">Bildirimler yüklenemedi</p>';
+        });
+}
+
+function createNotificationItem(notification) {
+    const iconClass = getNotificationIcon(notification.type);
+    const bgClass = getNotificationBgClass(notification.type);
+    const unreadClass = notification.isRead ? '' : 'unread';
+    const timeAgo = formatTimeAgo(notification.createdAt);
+    
+    return `
+        <a href="#" class="notification-item ${unreadClass}" onclick="markAsRead(${notification.id}, this)" data-id="${notification.id}">
+            <div class="notification-icon ${bgClass}">
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="notification-content">
+                <p>${notification.title}</p>
+                <span>${timeAgo}</span>
+            </div>
+        </a>
+    `;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'NewRfq': 'fas fa-file-invoice',
+        'NewQuotation': 'fas fa-handshake',
+        'QuotationApproved': 'fas fa-check',
+        'QuotationRejected': 'fas fa-times',
+        'RfqExpiring': 'fas fa-clock',
+        'Warning': 'fas fa-exclamation-triangle',
+        'Info': 'fas fa-info',
+        'System': 'fas fa-cog'
+    };
+    return icons[type] || 'fas fa-bell';
+}
+
+function getNotificationBgClass(type) {
+    const classes = {
+        'NewRfq': 'bg-gradient-primary',
+        'NewQuotation': 'bg-gradient-primary',
+        'QuotationApproved': 'bg-gradient-success',
+        'QuotationRejected': 'bg-gradient-danger',
+        'RfqExpiring': 'bg-gradient-warning',
+        'Warning': 'bg-gradient-warning',
+        'Info': 'bg-info',
+        'System': 'bg-secondary'
+    };
+    return classes[type] || 'bg-gradient-primary';
+}
+
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    
+    if (diff < 60) return 'Az önce';
+    if (diff < 3600) return Math.floor(diff / 60) + ' dakika önce';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' saat önce';
+    if (diff < 604800) return Math.floor(diff / 86400) + ' gün önce';
+    return date.toLocaleDateString('tr-TR');
+}
+
+function markAsRead(notificationId, element) {
+    fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
+        .then(response => {
+            if (response.ok) {
+                element.classList.remove('unread');
+                updateBadgeCount(-1);
+            }
+        })
+        .catch(error => console.error('Mark as read error:', error));
+}
+
+function markAllNotificationsRead() {
+    fetch('/api/notifications/read-all', { method: 'POST' })
+        .then(response => {
+            if (response.ok) {
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                });
+                updateBadgeCount(0, true);
+            }
+        })
+        .catch(error => console.error('Mark all read error:', error));
+    return false;
+}
+
+function updateBadgeCount(delta, reset = false) {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        if (reset) {
+            badge.style.display = 'none';
+        } else {
+            let count = parseInt(badge.textContent) + delta;
+            if (count <= 0) {
+                badge.style.display = 'none';
+            } else {
+                badge.textContent = count;
+            }
+        }
+    }
+}
+</script>

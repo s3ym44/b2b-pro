@@ -1,0 +1,610 @@
+@model B2BProcurement.Controllers.RfqComparisonViewModel
+@{
+    ViewData["Title"] = "Teklif Karşılaştırma";
+    ViewData["PageTitle"] = "Teklif Karşılaştırma Matrisi";
+    ViewData["Breadcrumb"] = "RFQ";
+}
+
+@section Styles {
+<style>
+    /* Page Header */
+    .comparison-header {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 24px 32px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .comparison-title h3 {
+        margin: 0 0 4px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    .comparison-title p {
+        margin: 0;
+        color: var(--gray-500);
+        font-size: 14px;
+    }
+    
+    .comparison-meta {
+        display: flex;
+        gap: 24px;
+    }
+    
+    .meta-item {
+        text-align: center;
+        padding: 12px 20px;
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+    }
+    
+    .meta-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .meta-label {
+        font-size: 12px;
+        color: var(--gray-500);
+        text-transform: uppercase;
+    }
+    
+    /* Matrix Container */
+    .matrix-container {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+    
+    .matrix-toolbar {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--gray-50);
+    }
+    
+    .matrix-toolbar h5 {
+        margin: 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    /* Matrix Table */
+    .matrix-scroll {
+        overflow-x: auto;
+    }
+    
+    .matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+    
+    .matrix-table th,
+    .matrix-table td {
+        border: 1px solid var(--gray-200);
+        padding: 0;
+        vertical-align: top;
+    }
+    
+    /* Fixed Column */
+    .matrix-table th:first-child,
+    .matrix-table td:first-child {
+        position: sticky;
+        left: 0;
+        background: var(--white);
+        z-index: 10;
+        min-width: 280px;
+        box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Header Row */
+    .matrix-table thead th {
+        background: var(--gray-800);
+        color: white;
+        padding: 0;
+    }
+    
+    .supplier-header {
+        padding: 16px;
+        text-align: center;
+        min-width: 200px;
+    }
+    
+    .supplier-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .supplier-total {
+        font-size: 18px;
+        font-weight: 700;
+        color: #10B981;
+    }
+    
+    .supplier-status {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        display: inline-block;
+        margin-top: 8px;
+    }
+    
+    .supplier-status.pending { background: #FEF3C7; color: #92400E; }
+    .supplier-status.approved { background: #DCFCE7; color: #166534; }
+    .supplier-status.rejected { background: #FEE2E2; color: #991B1B; }
+    
+    /* Corner Cell */
+    .corner-cell {
+        padding: 16px;
+        text-align: center;
+    }
+    
+    .corner-cell h6 {
+        margin: 0 0 4px;
+        font-weight: 600;
+    }
+    
+    .corner-cell small {
+        color: var(--gray-400);
+    }
+    
+    /* Item Row */
+    .item-cell {
+        padding: 16px;
+        background: var(--gray-50);
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 4px;
+    }
+    
+    .item-spec {
+        font-size: 12px;
+        color: var(--gray-500);
+    }
+    
+    .item-qty {
+        font-size: 13px;
+        color: var(--primary);
+        font-weight: 500;
+        margin-top: 6px;
+    }
+    
+    /* Price Cell */
+    .price-cell {
+        padding: 16px;
+        text-align: center;
+        transition: background 0.2s;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .price-cell:hover {
+        background: var(--gray-50);
+    }
+    
+    .price-cell.best-price {
+        background: linear-gradient(135deg, #DCFCE7, #D1FAE5);
+        position: relative;
+    }
+    
+    .price-cell.best-price::before {
+        content: "EN UYGUN";
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 9px;
+        padding: 2px 6px;
+        background: #10B981;
+        color: white;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    .price-cell.no-offer {
+        background: var(--gray-100);
+        color: var(--gray-400);
+    }
+    
+    .unit-price {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-bottom: 4px;
+    }
+    
+    .total-price {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    
+    .price-cell.best-price .total-price {
+        color: #059669;
+    }
+    
+    .delivery-info {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    /* Action Buttons */
+    .cell-actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+    }
+    
+    .btn-approve {
+        padding: 6px 12px;
+        font-size: 11px;
+        border-radius: var(--radius-sm);
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        background: #10B981;
+        color: white;
+    }
+    
+    .btn-approve:hover {
+        background: #059669;
+    }
+    
+    .btn-reject {
+        padding: 6px 12px;
+        font-size: 11px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--gray-300);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        background: white;
+        color: var(--gray-600);
+    }
+    
+    .btn-reject:hover {
+        background: #FEE2E2;
+        border-color: #FCA5A5;
+        color: #DC2626;
+    }
+    
+    /* Summary Row */
+    .summary-row td {
+        background: var(--gray-800) !important;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .summary-cell {
+        padding: 16px;
+        text-align: center;
+    }
+    
+    .summary-value {
+        font-size: 22px;
+        font-weight: 700;
+    }
+    
+    .summary-label {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+    
+    /* Bulk Actions */
+    .bulk-actions {
+        padding: 20px 24px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .bulk-info {
+        color: var(--gray-600);
+        font-size: 14px;
+    }
+    
+    .bulk-buttons {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .btn-bulk {
+        padding: 12px 24px;
+        font-weight: 500;
+        border-radius: var(--radius-md);
+    }
+    
+    /* Legend */
+    .legend {
+        display: flex;
+        gap: 20px;
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    
+    .legend-color.best { background: linear-gradient(135deg, #DCFCE7, #D1FAE5); border: 1px solid #10B981; }
+    .legend-color.normal { background: white; border: 1px solid var(--gray-300); }
+    .legend-color.no-offer { background: var(--gray-200); }
+</style>
+}
+
+<!-- Back Button -->
+<div class="mb-4">
+    <a href="@Url.Action("Details", new { id = Model.RfqId })" class="btn btn-light">
+        <i class="fas fa-arrow-left me-2"></i>RFQ Detayına Dön
+    </a>
+</div>
+
+<!-- Header -->
+<div class="comparison-header">
+    <div class="comparison-title">
+        <h3><i class="fas fa-chart-bar me-2"></i>@Model.Title</h3>
+        <p>@Model.RfqNumber | Para Birimi: @Model.Currency</p>
+    </div>
+    <div class="comparison-meta">
+        <div class="meta-item">
+            <div class="meta-value">@Model.Items.Count</div>
+            <div class="meta-label">Kalem</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-value">@Model.Suppliers.Count</div>
+            <div class="meta-label">Tedarikçi</div>
+        </div>
+    </div>
+</div>
+
+<!-- Matrix -->
+<div class="matrix-container">
+    <div class="matrix-toolbar">
+        <h5><i class="fas fa-table"></i>Karşılaştırma Matrisi</h5>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color best"></div>
+                <span>En Uygun Fiyat</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color normal"></div>
+                <span>Diğer Teklifler</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color no-offer"></div>
+                <span>Teklif Yok</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="matrix-scroll">
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="corner-cell">
+                            <h6>RFQ Kalemleri</h6>
+                            <small>Miktar / Birim</small>
+                        </div>
+                    </th>
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        var statusClass = supplier.Status switch {
+                            B2BProcurement.Core.Enums.QuotationStatus.Submitted => "pending",
+                            B2BProcurement.Core.Enums.QuotationStatus.Approved => "approved",
+                            B2BProcurement.Core.Enums.QuotationStatus.Rejected => "rejected",
+                            _ => "pending"
+                        };
+                        var statusText = supplier.Status switch {
+                            B2BProcurement.Core.Enums.QuotationStatus.Submitted => "Değerlendirmede",
+                            B2BProcurement.Core.Enums.QuotationStatus.Approved => "Onaylandı",
+                            B2BProcurement.Core.Enums.QuotationStatus.Rejected => "Reddedildi",
+                            _ => "Beklemede"
+                        };
+                        <th>
+                            <div class="supplier-header">
+                                <div class="supplier-name">@supplier.SupplierName</div>
+                                <div class="supplier-total">@supplier.TotalAmount.ToString("N2") @Model.Currency</div>
+                                <span class="supplier-status @statusClass">@statusText</span>
+                            </div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    // Find best price for this item
+                    decimal? bestPrice = null;
+                    foreach (var supplier in Model.Suppliers)
+                    {
+                        if (supplier.ItemPrices.TryGetValue(item.ItemId, out var price))
+                        {
+                            if (!bestPrice.HasValue || price.TotalPrice < bestPrice.Value)
+                            {
+                                bestPrice = price.TotalPrice;
+                            }
+                        }
+                    }
+                    
+                    <tr>
+                        <td>
+                            <div class="item-cell">
+                                <div class="item-name">@item.Description</div>
+                                @if (!string.IsNullOrEmpty(item.MaterialName))
+                                {
+                                    <div class="item-spec">Malzeme: @item.MaterialName</div>
+                                }
+                                <div class="item-qty">
+                                    <i class="fas fa-cube me-1"></i>@item.Quantity.ToString("N2") @item.Unit
+                                </div>
+                            </div>
+                        </td>
+                        @foreach (var supplier in Model.Suppliers)
+                        {
+                            if (supplier.ItemPrices.TryGetValue(item.ItemId, out var priceInfo))
+                            {
+                                var isBest = bestPrice.HasValue && priceInfo.TotalPrice == bestPrice.Value;
+                                <td>
+                                    <div class="price-cell @(isBest ? "best-price" : "")">
+                                        <div class="unit-price">@priceInfo.UnitPrice.ToString("N2") @Model.Currency / @item.Unit</div>
+                                        <div class="total-price">@priceInfo.TotalPrice.ToString("N2")</div>
+                                        @if (priceInfo.DeliveryDays.HasValue)
+                                        {
+                                            <div class="delivery-info">
+                                                <i class="fas fa-truck"></i>
+                                                @priceInfo.DeliveryDays gün
+                                            </div>
+                                        }
+                                        @if (supplier.Status == B2BProcurement.Core.Enums.QuotationStatus.Submitted)
+                                        {
+                                            <div class="cell-actions">
+                                                <button type="button" class="btn-approve" onclick="approveItem(@supplier.QuotationId, @item.ItemId)" title="Bu kalemi onayla">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn-reject" onclick="rejectItem(@supplier.QuotationId, @item.ItemId)" title="Bu kalemi reddet">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    <div class="price-cell no-offer">
+                                        <i class="fas fa-minus" style="font-size: 24px;"></i>
+                                        <div class="mt-2">Teklif Yok</div>
+                                    </div>
+                                </td>
+                            }
+                        }
+                    </tr>
+                }
+                
+                <!-- Summary Row -->
+                <tr class="summary-row">
+                    <td>
+                        <div class="summary-cell" style="text-align: left;">
+                            <div class="summary-label">TOPLAM</div>
+                        </div>
+                    </td>
+                    @{
+                        var minTotal = Model.Suppliers.Any() ? Model.Suppliers.Min(s => s.TotalAmount) : 0;
+                    }
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        var isMinTotal = supplier.TotalAmount == minTotal;
+                        <td>
+                            <div class="summary-cell">
+                                <div class="summary-value" style="@(isMinTotal ? "color: #10B981;" : "")">
+                                    @if (isMinTotal)
+                                    {
+                                        <i class="fas fa-trophy me-1"></i>
+                                    }
+                                    @supplier.TotalAmount.ToString("N2")
+                                </div>
+                                <div class="summary-label">@Model.Currency</div>
+                            </div>
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+        <div class="bulk-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Toplu işlem için tedarikçi seçin veya tek tek onay/red işlemi yapın.
+        </div>
+        <div class="bulk-buttons">
+            @foreach (var supplier in Model.Suppliers.Where(s => s.Status == B2BProcurement.Core.Enums.QuotationStatus.Submitted))
+            {
+                <button type="button" class="btn btn-bulk btn-success" onclick="approveQuotation(@supplier.QuotationId)">
+                    <i class="fas fa-check me-2"></i>@supplier.SupplierName Tüm Teklifi Onayla
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Form for Actions -->
+<form id="actionForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="quotationId" id="actionQuotationId" />
+    <input type="hidden" name="itemId" id="actionItemId" />
+    <input type="hidden" name="action" id="actionType" />
+</form>
+
+@section Scripts {
+<script>
+    function approveItem(quotationId, itemId) {
+        if (confirm('Bu kalemi onaylamak istediğinizden emin misiniz?')) {
+            submitAction(quotationId, itemId, 'approve');
+        }
+    }
+    
+    function rejectItem(quotationId, itemId) {
+        if (confirm('Bu kalemi reddetmek istediğinizden emin misiniz?')) {
+            submitAction(quotationId, itemId, 'reject');
+        }
+    }
+    
+    function approveQuotation(quotationId) {
+        if (confirm('Bu tedarikçinin TÜM kalemlerini onaylamak istediğinizden emin misiniz?')) {
+            $('#actionQuotationId').val(quotationId);
+            $('#actionItemId').val('');
+            $('#actionType').val('approve_all');
+            $('#actionForm').attr('action', '@Url.Action("ApproveQuotation", "Quotation")').submit();
+        }
+    }
+    
+    function submitAction(quotationId, itemId, action) {
+        $('#actionQuotationId').val(quotationId);
+        $('#actionItemId').val(itemId);
+        $('#actionType').val(action);
+        
+        var url = action === 'approve' 
+            ? '@Url.Action("ApproveItem", "Quotation")'
+            : '@Url.Action("RejectItem", "Quotation")';
+        
+        $('#actionForm').attr('action', url).submit();
+    }
+</script>
+}
