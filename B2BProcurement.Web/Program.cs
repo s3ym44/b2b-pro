@@ -20,6 +20,14 @@ if (!builder.Environment.IsDevelopment())
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+// SQLite için veritabanı yolunu ContentRootPath'e göre ayarla
+if (connectionString.Contains("Data Source=") && !connectionString.Contains("/"))
+{
+    var dbFileName = connectionString.Replace("Data Source=", "").Replace("./", "").Trim();
+    var dbPath = Path.Combine(builder.Environment.ContentRootPath, dbFileName);
+    connectionString = $"Data Source={dbPath}";
+}
+
 // ========================================
 // 2. Database Context
 // ========================================
